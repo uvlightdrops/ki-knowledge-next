@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ki-knowledge-next"
+version = "0.1.0"
+description = "Frisch aufgesetztes Django-Projekt für die Weiterentwicklung von ki-knowledge"
+requires-python = ">=3.12"
+dependencies = [
+    "Django>=6.0",
+    "wissenswiki-django",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8", "pytest-django>=4.9"]
+
+[tool.setuptools.packages.find]
+include = ["knext*"]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "knext.settings"
+testpaths = ["tests"]

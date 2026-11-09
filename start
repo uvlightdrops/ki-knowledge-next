@@ -1,0 +1,7 @@
+#!/bin/sh
+# Lokal starten: ./start [adresse:port]; Standard 127.0.0.1:8780.
+set -e
+ROOT=$(dirname "$(readlink -f "$0")")
+cd "$ROOT"
+.venv/bin/python manage.py migrate --noinput
+exec .venv/bin/python manage.py runserver "${1:-127.0.0.1:8780}"
