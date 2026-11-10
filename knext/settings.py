@@ -17,6 +17,10 @@ def _env_path(name: str, default: Path) -> str:
 VAR_DIR = Path(_env_path("KI_NEXT_VAR", BASE_DIR / "var"))
 VAR_DIR.mkdir(parents=True, exist_ok=True)
 
+DOC_RELATIONS_DIR = Path(os.environ.get("KI_NEXT_DOC_RELATIONS", VAR_DIR / "doc-relations")).expanduser()
+if "KI_NEXT_DOC_RELATIONS" not in os.environ:
+    DOC_RELATIONS_DIR.mkdir(parents=True, exist_ok=True)
+
 
 def _secret_key() -> str:
     path = VAR_DIR / "secret_key"
@@ -39,6 +43,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "wissenswiki_core",
     "wissenswiki",
+    "knext.content",
 ]
 
 MIDDLEWARE = [
@@ -64,12 +69,13 @@ WSGI_APPLICATION = "knext.wsgi.application"
 
 TEMPLATES = [{
     "BACKEND": "django.template.backends.django.DjangoTemplates",
-    "DIRS": [],
+    "DIRS": [BASE_DIR / "knext" / "templates"],
     "APP_DIRS": True,
     "OPTIONS": {"context_processors": [
         "django.template.context_processors.request",
         "django.contrib.auth.context_processors.auth",
         "django.contrib.messages.context_processors.messages",
+        "knext.navigation.navigation",
     ]},
 }]
 
@@ -83,14 +89,15 @@ USE_TZ = True
 STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 LOGIN_URL = "admin:login"
+WISSENSWIKI_NAVIGATION_TEMPLATE = "navigation.html"
 
 # Same data as ./start-wiki in ki-knowledge plus its Markdown domains (former --ki-domains).
 WISSENSWIKI = {
     "WORKSPACE": _env_path("KI_NEXT_WORKSPACE", HOME / "dev_wiki"),
     "DOMAINS": [{
         "name": "Dokumentation",
-        "source": _env_path("KI_NEXT_DOC", BASE_DIR.parent / "ki-knowledge" / "doc"),
-        "relations": _env_path("KI_NEXT_DOC_RELATIONS", HOME / "dev_wiki_rel"),
+        "source": _env_path("KI_NEXT_DOC", BASE_DIR / "doc"),
+        "relations": str(DOC_RELATIONS_DIR),
     }],
     "MARKDOWN_DATA": {
         "root": _env_path("KI_NEXT_DATA", HOME / "dev_data" / "ki-knowledge"),

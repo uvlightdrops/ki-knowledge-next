@@ -1,0 +1,13 @@
+{% extends "content/base.html" %}{% block content %}
+<h1>{{ run.source.filename }}</h1><section class="panel"><h2>{{ run.get_status_display }}</h2>
+<dl><dt>Domäne</dt><dd>{{ run.source.domain }}</dd><dt>Pipeline / Adapter</dt><dd>{{ run.pipeline_version }} / {{ run.adapter }}</dd>
+<dt>Originalquelle</dt><dd>{{ run.source.size }} Bytes · SHA-256 <code>{{ run.source.sha256 }}</code></dd>
+<dt>Versuche</dt><dd>{{ run.attempts }}</dd></dl>
+{% if run.error %}<p class="error" role="alert">{{ run.error }}</p>{% endif %}
+{% for warning in run.warnings %}<p class="warning">{{ warning }}</p>{% endfor %}
+{% if run.status == "failed" %}<form method="post" action="{% url 'content:retry' run.pk %}">{% csrf_token %}
+<button type="submit">Verarbeitung erneut versuchen</button></form>{% endif %}
+</section><section class="panel"><h2>Extrahierte Entwürfe</h2>
+{% for document in run.documents.all %}<p><a href="{% url 'content:document' document.pk %}">{{ document.title }}</a>
+{% if document.source_locator %}<small> · {{ document.source_locator }}</small>{% endif %}</p>
+{% empty %}<p>Kein Entwurf erstellt.</p>{% endfor %}</section>{% endblock %}

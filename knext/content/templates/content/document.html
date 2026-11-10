@@ -1,0 +1,23 @@
+{% extends "content/base.html" %}{% block title %}{{ revision.title }}{% endblock %}
+{% block content %}
+<h1>{{ revision.title }}</h1>
+<p><a href="{% url 'content:run' document.run_id %}">Quelle: {{ document.run.source.filename }}</a>
+ · {{ document.run.source.domain }} · {{ document.source_locator }}</p>
+<p class="badge">Entwurf · Revision {{ revision.number }}
+{% if document.approved_revision %} · Freigegeben: Revision {{ document.approved_revision.number }}{% endif %}</p>
+{% for warning in document.run.warnings %}<p class="warning">{{ warning }}</p>{% endfor %}
+<div class="columns"><section class="panel"><h2>Bearbeiten</h2>
+<form method="post">{% csrf_token %}{{ form.as_p }}<button type="submit">Als neue Revision speichern</button></form>
+</section><section class="panel"><h2>Gespeicherte Vorschau · nicht veröffentlicht</h2>
+<article class="prose">{{ body_html }}</article></section></div>
+<section class="panel"><h2>Freigabe und Ausgabe</h2>
+<p>Eine Freigabe gilt genau für diese Revision. Spätere Änderungen bleiben zunächst Entwurf.</p>
+{% if document.approved_revision %}<p>Freigegeben von {{ document.approved_by }} am {{ document.approved_at }}.</p>{% endif %}
+{% if perms.content.publish_content %}<form method="post" action="{% url 'content:approve' document.pk %}">
+{% csrf_token %}{{ approval_form }}<button type="submit">Revision {{ revision.number }} freigeben</button></form>
+{% else %}<p class="muted">Zur Freigabe fehlt die Berechtigung „Darf Inhaltsrevisionen freigeben“.</p>{% endif %}
+{% if document.approved_revision %}<p><a href="{% url 'content:download' document.pk %}">Freigegebene Revision als HTML herunterladen</a></p>{% endif %}
+</section><details class="panel"><summary>Revisionen und Quellmetadaten</summary>
+<ul>{% for item in history %}<li>Revision {{ item.number }} · {{ item.created_at }} · {{ item.created_by }} · {{ item.title }}</li>{% endfor %}</ul>
+<pre>{{ revision.metadata }}</pre></details>
+{% endblock %}

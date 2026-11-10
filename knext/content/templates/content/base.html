@@ -1,0 +1,8 @@
+{% load static %}<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Import und Inhalte{% endblock %} · ki-knowledge next</title>
+<link rel="stylesheet" href="{% static 'content/workbench.css' %}"></head>
+<body>{% include "navigation.html" %}
+<main><p class="badge">Prototyp · Import → Entwurf → Freigabe → HTML</p>
+{% for message in messages %}<p class="message" role="status">{{ message }}</p>{% endfor %}
+{% block content %}{% endblock %}</main></body></html>

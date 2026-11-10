@@ -1,0 +1,4 @@
+{% extends "content/base.html" %}{% block content %}
+<h1>Datei importieren</h1><section class="panel">
+<form method="post" enctype="multipart/form-data">{% csrf_token %}{{ form.as_p }}
+<button type="submit">Import starten</button></form></section>{% endblock %}

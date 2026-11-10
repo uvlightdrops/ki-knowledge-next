@@ -1,0 +1,26 @@
+{% extends "content/base.html" %}
+{% block content %}
+<h1>Quellen werden zu prüfbaren Inhalten</h1>
+<p>Originale bewahren, Ergebnisse prüfen und Entwürfe bearbeiten. Ein Import veröffentlicht nichts.</p>
+<section class="panel"><h2>Datei importieren</h2>
+<form action="{% url 'content:import' %}" method="post" enctype="multipart/form-data">
+{% csrf_token %}{{ form.as_p }}<button type="submit">Import starten</button></form>
+<p class="muted">Maximal 10 MiB; synchrone Verarbeitung. Unterstützt: {{ extensions|join:", " }}.</p>
+<p class="muted">Keine OCR, kein Webabruf, keine KI. Alle angemeldeten Nutzer arbeiten im gemeinsamen Prototyp.</p>
+</section>
+<section class="panel"><h2>Importläufe</h2>
+<table><thead><tr><th>Quelle</th><th>Domäne</th><th>Verarbeitung</th><th>Ergebnis</th></tr></thead><tbody>
+{% for run in runs %}<tr>
+<td><a href="{% url 'content:run' run.pk %}">{{ run.source.filename }}</a><br><small>{{ run.created_at }}</small></td>
+<td>{{ run.source.domain }}</td><td>{{ run.get_status_display }}<br><small>{{ run.adapter }}</small></td>
+<td>{% for document in run.documents.all %}<a href="{% url 'content:document' document.pk %}">{{ document.title }}</a><br>
+{% empty %}Noch kein Entwurf{% endfor %}</td></tr>
+{% empty %}<tr><td colspan="4">Noch keine Quellen importiert.</td></tr>{% endfor %}
+</tbody></table>
+{% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}">Zurück</a>{% endif %}
+{% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}">Weitere</a>{% endif %}
+</section>
+<section class="panel"><h2>Statische Ausgabe</h2><p>Nur ausdrücklich freigegebene Revisionen. ZIP mit Index und HTML-Seiten; keine automatische Bereitstellung.</p>
+{% for domain in domains %}<p><a class="button" href="{% url 'content:site-download' %}?domain={{ domain|urlencode }}">{{ domain }} als HTML-Site herunterladen</a></p>
+{% empty %}<p class="muted">Noch keine freigegebenen Inhalte.</p>{% endfor %}</section>
+{% endblock %}

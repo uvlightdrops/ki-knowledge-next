@@ -1,0 +1,14 @@
+{% load static %}{% if user.is_authenticated %}
+<link rel="stylesheet" href="{% static 'knext/navigation.css' %}">
+<div class="knext-app-navigation">
+<details class="knext-menu">
+<summary aria-label="Hauptmenü"><span class="knext-menu-icon" aria-hidden="true"></span><span>Menü</span></summary>
+<nav aria-label="Hauptnavigation">
+{% for item in app_navigation_items %}
+<a href="{{ item.href }}"{% if item.active %} aria-current="page"{% endif %}>{{ item.label }}</a>
+{% endfor %}
+</nav></details>
+<a class="knext-home" href="{% url 'content:index' %}">ki-knowledge next</a>
+</div>
+<script src="{% static 'knext/navigation.js' %}" defer></script>
+{% endif %}

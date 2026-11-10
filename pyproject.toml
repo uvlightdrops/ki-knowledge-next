@@ -10,6 +10,13 @@ requires-python = ">=3.12"
 dependencies = [
     "Django>=6.0",
     "wissenswiki-django",
+    "pypdf>=5",
+    "python-docx>=1.1",
+    "openpyxl>=3.1",
+    "beautifulsoup4>=4.12",
+    "Markdown>=3.7",
+    "bleach>=6.2",
+    "defusedxml>=0.7",
 ]
 
 [project.optional-dependencies]
@@ -17,6 +24,10 @@ test = ["pytest>=8", "pytest-django>=4.9"]
 
 [tool.setuptools.packages.find]
 include = ["knext*"]
+
+[tool.setuptools.package-data]
+"knext.content" = ["templates/content/*.html", "static/content/*.css", "static/knext/*"]
+"knext" = ["templates/*.html", "templates/admin/*.html"]
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "knext.settings"

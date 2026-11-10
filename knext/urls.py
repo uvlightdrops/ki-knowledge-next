@@ -8,4 +8,5 @@ urlpatterns = [
     path("favicon.ico", lambda request: HttpResponse(status=204)),
     path("admin/", admin.site.urls),
     path("wiki/", include("wissenswiki.urls")),
+    path("content/", include("knext.content.urls")),
 ]

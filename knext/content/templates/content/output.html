@@ -1,0 +1,8 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ revision.title }}</title>{% include "content/output_style.html" %}</head><body>
+{% if navigation %}<nav aria-label="Seiten"><a href="index.html">Übersicht</a>
+{% for item in navigation %} · <a href="{{ item.href }}">{{ item.title }}</a>{% endfor %}</nav>{% endif %}
+<main><h1>{{ revision.title }}</h1>{{ body_html }}</main>
+<footer><hr><p>Quelle: {{ document.run.source.filename }}{% if document.source_locator %} · {{ document.source_locator }}{% endif %}
+ · Revision {{ revision.number }} · {{ document.run.source.domain }}</p></footer></body></html>
