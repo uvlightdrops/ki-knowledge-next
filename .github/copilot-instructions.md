@@ -3,7 +3,7 @@
 ## Shared instructions
 
 Before starting a task, read the shared instructions index at
-`../../dev_doc/doc/agent-instructions/README.md` and the topic files relevant to
+`../../dev_doc/agent-instructions/README.md` and the topic files relevant to
 the task. Follow `../../dev_doc/.github/copilot-instructions.md` as well.
 
 Read this repository's `AGENTS.md` and `docs/AGENTS.md` if present before
