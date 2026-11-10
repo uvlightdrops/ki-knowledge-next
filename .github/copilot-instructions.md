@@ -1,5 +1,11 @@
 # Repository instructions
 
+## Shared instructions
+
+Before starting a task, read the shared instructions index at
+`../../dev_doc/doc/agent-instructions/README.md` and the topic files relevant to
+the task. Follow `../../dev_doc/.github/copilot-instructions.md` as well.
+
 Read this repository's `AGENTS.md` and `docs/AGENTS.md` if present before
 editing. Preserve project-specific instructions and unrelated worktree changes.
 
@@ -15,3 +21,8 @@ If the client does not discover the category-nested skills or cannot load a
 skill, read its `SKILL.md` directly before editing. If the link is broken,
 report the missing central checkout; do not silently skip the standards or
 copy skill definitions into this repository.
+
+## Project-specific guidance
+
+Keep implementation details and product documentation in this repository.
+Use the shared `../../dev_doc/` instructions for cross-project practices.
