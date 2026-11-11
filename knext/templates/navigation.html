@@ -1,14 +1,31 @@
 {% load static %}{% if user.is_authenticated %}
 <link rel="stylesheet" href="{% static 'knext/navigation.css' %}">
+{% if app_workspace_theme %}<link rel="stylesheet" href="{% static 'knext/theme.css' %}">{% endif %}
 <div class="knext-app-navigation">
 <details class="knext-menu">
 <summary aria-label="Hauptmenü"><span class="knext-menu-icon" aria-hidden="true"></span><span>Menü</span></summary>
-<nav aria-label="Hauptnavigation">
-{% for item in app_navigation_items %}
-<a href="{{ item.href }}"{% if item.active %} aria-current="page"{% endif %}>{{ item.label }}</a>
+<nav aria-label="Alle Bereiche">
+{% for group in app_navigation_groups %}
+<div class="knext-menu-group" data-group="{{ group.key }}"><strong>{{ group.label }}</strong>
+{% for item in group.items %}<a href="{{ item.href }}"{% if forloop.first %} data-group-entry{% endif %}{% if item.active %} aria-current="location"{% endif %}>{{ item.label }}</a>{% endfor %}
+</div>
 {% endfor %}
 </nav></details>
 <a class="knext-home" href="{% url 'content:index' %}">ki-knowledge next</a>
+<form class="knext-domain-switcher" action="{% url 'select-domain' %}" method="post">
+{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
+<label for="knext-domain">Domäne</label><select id="knext-domain" name="domain">
+<option value="">Alle / Arbeitsraum</option>
+{% for name in app_available_domains %}<option value="{{ name }}"{% if name == app_active_domain %} selected{% endif %}>{{ name }}</option>{% endfor %}
+</select><button type="submit">Wechseln</button></form>
+<nav class="knext-primary" aria-label="Hauptnavigation">
+{% for group in app_navigation_groups %}<a href="{{ group.href }}" data-group="{{ group.key }}"{% if group.active %} aria-current="location"{% endif %}>{{ group.label }}</a>{% endfor %}
+</nav>
+{% for group in app_navigation_groups %}
+<nav class="knext-secondary" aria-label="{{ group.label }} – Unternavigation" data-group="{{ group.key }}"{% if not group.active %} hidden{% endif %}>
+{% for item in group.items %}<a href="{{ item.href }}"{% if forloop.first %} data-group-entry{% endif %}{% if item.active %} aria-current="location"{% endif %}{% if app_workshop_context and group.key == 'intern' and forloop.first %} class="knext-workshop-context"{% endif %}>{{ item.label }}</a>{% endfor %}
+</nav>
+{% endfor %}
 </div>
 <script src="{% static 'knext/navigation.js' %}" defer></script>
 {% endif %}

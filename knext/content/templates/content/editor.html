@@ -1,0 +1,54 @@
+{% extends "content/base.html" %}{% load static %}{% block title %}{{ revision.title }} · Editor{% endblock %}
+{% block content %}
+<link rel="stylesheet" href="{% static 'content/editor.css' %}">
+<div class="editor-heading"><div><h1>{{ revision.title }}</h1>
+<p class="muted">{{ document.run.source.domain }} · {{ document.run.source.filename }}</p></div>
+<a href="{% url 'content:editor-index' %}" data-leave-editor>Anderen Text öffnen</a></div>
+<div class="editor-toolbar" role="group" aria-label="Ansichten">
+<button type="button" id="toggle-network" aria-expanded="false" aria-controls="editor-network" hidden>Bubble-Netz</button>
+<button type="button" id="toggle-preview" aria-expanded="true" aria-controls="editor-preview" hidden>Vorschau</button>
+<span id="editor-status" role="status" aria-live="polite">Gespeicherter Arbeitsstand</span>
+</div>
+<div id="editor-layout" class="editor-layout">
+<aside class="panel" id="editor-network" hidden>
+<h2>Bubble-Navigation</h2><p class="muted">Überschriften wählen markiert den zugehörigen Text. Linien zeigen die Gliederung, keine fachlichen Relationen.</p>
+<label for="outline-search">Abschnitt suchen</label><input id="outline-search" type="search">
+<div id="editor-bubbles"></div>
+<label for="outline-select">Alle Abschnitte</label><select id="outline-select"><option value="">Ganzer Text</option></select>
+{% if revision.outline %}<p><a href="{% url 'content:collection' revision.outline.pk %}">Gespeicherte Gliederung und Ressourcen</a></p>{% endif %}
+</aside>
+<section class="panel editor-writing"><h2>Markdown</h2>
+<form method="post" id="editor-form" data-preview-url="{% url 'content:editor-preview' %}" data-restore-url="{% url 'content:editor-restore' document.pk %}">
+{% csrf_token %}{{ form.expected }}{{ form.non_field_errors }}
+<label for="{{ form.title.id_for_label }}">Titel</label>{{ form.title }}{{ form.title.errors }}
+<label for="{{ form.body.id_for_label }}">Text</label>{{ form.body }}{{ form.body.errors }}
+<div class="editor-actions"><button type="submit">Speichern</button>
+<button type="button" id="refresh-preview" hidden>Vorschau aktualisieren</button>
+<a href="{% url 'content:editor' document.pk %}" data-leave-editor>Gespeicherten Stand laden</a></div>
+<p class="muted">Speichern bewahrt frühere Fassungen. Rückgängig während der Eingabe: Strg+Z beziehungsweise ⌘Z.</p>
+{% if previous %}<details id="editor-backups"><summary>Sicherungen</summary>
+<p>Wiederherstellen bewahrt den aktuellen gespeicherten Stand und lässt die Freigabe unverändert.
+Ungespeicherte Eingaben werden dabei verworfen.</p>
+<label for="backup-number">Früherer Arbeitsstand</label>
+<select name="number" id="backup-number">{% for backup in backups %}
+<option value="{{ backup.number }}">{{ backup.created_at|date:"d.m.Y H:i" }} · {{ backup.title }} · {{ backup.created_by }} · Stand {{ backup.number }}</option>
+{% endfor %}</select>
+<button type="submit" formaction="{% url 'content:editor-restore' document.pk %}" formnovalidate id="restore-backup">Gewählten Stand wiederherstellen</button>
+<p><a href="{% url 'content:revision' document.pk previous.number %}" data-leave-editor>Vorherigen Stand ansehen und vergleichen</a></p>
+</details>{% endif %}
+</form>
+</section>
+<section class="panel" id="editor-preview"><h2>Vorschau</h2>
+<p class="muted" id="preview-state">Gespeicherte Fassung; nicht automatisch veröffentlicht.</p>
+<article class="prose" id="editor-preview-body">{{ body_html }}</article></section>
+</div>
+<details class="panel"><summary>Herkunft und Freigabe</summary>
+<p><a href="{% url 'content:document' document.pk %}" data-leave-editor>Dokumentdetails und Freigabe</a> ·
+<a href="{% url 'content:source' document.run.source_id %}" data-leave-editor>Quelle</a></p>
+{% if document.approved_revision %}<p>Freigegebene Fassung: Stand {{ document.approved_revision.number }}. Neue Bearbeitungen ändern sie nicht.</p>{% endif %}
+{% if revision.yaml_header %}<h2>Dokumentmetadaten</h2><pre>{{ revision.yaml_header }}</pre>{% endif %}
+</details>
+{{ editor_outline|json_script:"editor-outline-data" }}
+{{ editor_saved|json_script:"editor-saved-data" }}
+<script src="{% static 'content/editor.js' %}" defer></script>
+{% endblock %}

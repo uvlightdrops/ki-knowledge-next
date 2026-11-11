@@ -1,14 +1,16 @@
 {% extends "content/base.html" %}
+{% block title %}Importläufe{% endblock %}
 {% block content %}
-<h1>Quellen werden zu prüfbaren Inhalten</h1>
+<h1>Importläufe</h1>
 <p>Originale bewahren, Ergebnisse prüfen und Entwürfe bearbeiten. Ein Import veröffentlicht nichts.</p>
-<section class="panel"><h2>Datei importieren</h2>
-<form action="{% url 'content:import' %}" method="post" enctype="multipart/form-data">
-{% csrf_token %}{{ form.as_p }}<button type="submit">Import starten</button></form>
-<p class="muted">Maximal 10 MiB; synchrone Verarbeitung. Unterstützt: {{ extensions|join:", " }}.</p>
-<p class="muted">Keine OCR, kein Webabruf, keine KI. Alle angemeldeten Nutzer arbeiten im gemeinsamen Prototyp.</p>
-</section>
+<p><a class="button" href="{% url 'content:inventory' %}">Dateien und Quellen für Importjobs auswählen</a></p>
+<p>Importe werden über die Mehrfachauswahl vorhandener Dateien und Quellen eingereiht.
+Ein separat gestarteter Importworker verarbeitet die Jobs.</p>
 <section class="panel"><h2>Importläufe</h2>
+<form method="get"><label>Dateiname <input name="q" value="{{ request.GET.q }}"></label>
+<label>Status <select name="status"><option value="">Alle</option>{% for value,label in statuses.choices %}<option value="{{ value }}"{% if request.GET.status == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
+{% if request.GET.domain %}<input type="hidden" name="domain" value="{{ request.GET.domain }}">{% endif %}<button>Filtern</button></form>
+<p><a href="{% url 'content:jobs' %}">Importjobs ansehen</a>.</p>
 <table><thead><tr><th>Quelle</th><th>Domäne</th><th>Verarbeitung</th><th>Ergebnis</th></tr></thead><tbody>
 {% for run in runs %}<tr>
 <td><a href="{% url 'content:run' run.pk %}">{{ run.source.filename }}</a><br><small>{{ run.created_at }}</small></td>
@@ -17,10 +19,6 @@
 {% empty %}Noch kein Entwurf{% endfor %}</td></tr>
 {% empty %}<tr><td colspan="4">Noch keine Quellen importiert.</td></tr>{% endfor %}
 </tbody></table>
-{% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}">Zurück</a>{% endif %}
-{% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}">Weitere</a>{% endif %}
+{% include "content/pagination.html" %}
 </section>
-<section class="panel"><h2>Statische Ausgabe</h2><p>Nur ausdrücklich freigegebene Revisionen. ZIP mit Index und HTML-Seiten; keine automatische Bereitstellung.</p>
-{% for domain in domains %}<p><a class="button" href="{% url 'content:site-download' %}?domain={{ domain|urlencode }}">{{ domain }} als HTML-Site herunterladen</a></p>
-{% empty %}<p class="muted">Noch keine freigegebenen Inhalte.</p>{% endfor %}</section>
 {% endblock %}

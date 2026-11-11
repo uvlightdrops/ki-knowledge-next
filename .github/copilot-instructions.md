@@ -26,3 +26,12 @@ copy skill definitions into this repository.
 
 Keep implementation details and product documentation in this repository.
 Use the shared `../../dev_doc/` instructions for cross-project practices.
+
+Read `doc/requirements/TODO-INDEX.md` when starting work. Simple, clearly
+scoped items are standing implementation tasks: complete fitting independent
+items alongside the main task without waiting for another request. Preserve
+the main task and concurrent edits. Plain bullet points are direct tasks;
+complex or unclear topics have their own heading and a clickable concept
+link first. Move completed items to the corresponding DONE subsection.
+This mini TODO sheet is exempt from per-block YAML metadata; keep that
+metadata in architecture and feature documentation.

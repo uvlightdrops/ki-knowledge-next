@@ -1,0 +1,16 @@
+{% extends "content/base.html" %}{% block title %}{{ resource.title }}{% endblock %}{% block content %}
+<h1>{{ resource.title }}</h1><p>{{ resource.get_kind_display }} · {{ resource.domain }} · <code>{{ resource.pk }}</code></p>
+<p><a href="{% url 'content:resources' %}">Ressourcenkatalog</a> · <a href="{% url 'content:collections' %}">Zusammenstellungen</a>
+{% if resource.document_id %} · <a href="{% url 'content:document' resource.document_id %}">Dokumentwerkstatt</a>{% endif %}
+{% if resource.kind == "collection" %} · <a href="{% url 'content:collection' resource.pk %}">Zusammenstellung öffnen</a>{% endif %}</p>
+{% if resource.document_id %}<p>Lokaler Identitätsschlüssel: <code>{{ resource.local_key|default:"Dokument" }}</code>.</p>
+{% if resource.kind == "document" %}<details class="panel"><summary>Revisions-IDs für Platzierungen</summary>
+{% for revision in resource.document.revisions.all %}<p>r{{ revision.number }} · Datenbank-ID {{ revision.pk }} · {{ revision.title }}</p>{% endfor %}</details>{% endif %}{% endif %}
+{% for snapshot in snapshots %}<details class="panel"><summary>{{ snapshot.title }} · r{{ snapshot.revision.number }} · Revisionsdatenbank-ID {{ snapshot.revision_id }}</summary>
+<p>H{{ snapshot.level }} · Zeilen {{ snapshot.start_line }}–{{ snapshot.end_line }} · explizite ID: {{ snapshot.explicit_id|default:"Keine" }}</p><pre>{{ snapshot.body }}</pre></details>{% endfor %}
+<section class="panel"><h2>Ausgehende Relationen</h2>
+{% for relation in outgoing %}<p>{{ relation.relation_type }} → <a href="{% url 'content:resource' relation.target_id %}">{{ relation.target.title }}</a> · {{ relation.reason }}</p>
+<form method="post" action="{% url 'content:relation-delete' relation.pk %}">{% csrf_token %}<button>Relation entfernen</button></form>{% empty %}<p>Keine.</p>{% endfor %}
+<h2>Eingehende Relationen</h2>{% for relation in incoming %}<p><a href="{% url 'content:resource' relation.source_id %}">{{ relation.source.title }}</a> → {{ relation.relation_type }} · {{ relation.reason }}</p>{% empty %}<p>Keine.</p>{% endfor %}</section>
+<section class="panel"><h2>Relation anlegen</h2><p><a href="{% url 'content:relation-types' %}">Relationstyp definieren</a>. Beziehungen dürfen Domänengrenzen überschreiten.</p>
+<form method="post">{% csrf_token %}{{ form.as_p }}<button>Relation speichern</button></form></section>{% endblock %}

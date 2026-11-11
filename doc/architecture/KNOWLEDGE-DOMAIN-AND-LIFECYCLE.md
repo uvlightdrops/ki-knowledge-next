@@ -5,16 +5,9 @@ agent_project: ki-knowledge-next
 scope: architecture
 purpose: "Skizziert, wie Quellen in einer Domäne aufgenommen, geprüft, gemeinsam weiterentwickelt und als freigegebene Inhalte ausgegeben werden können."
 created: "2026-11-09T18:13:00+01:00"
-updated: "2026-11-10T11:17:00+01:00"
-update_reason: "Implementierten Import- und Ausgabeprototyp vom weitergehenden Zielbild abgegrenzt"
+updated: "2026-11-11 15"
+update_reason: "Domänenverweise auf die getrennte Featurebeschreibung umgestellt"
 status: draft
-semantic_blocks:
-  - domain-boundary
-  - lifecycle
-  - collaboration
-  - publishing
-  - current-and-target
-  - open-questions
 relations:
   - target: "README.md"
     type: parent
@@ -31,6 +24,15 @@ relations:
 
 ## Domänengrenze [domain-boundary]
 
+```yaml block-meta
+updated: "2026-11-11 15"
+status: active
+relations:
+  - target: ../features/DOMAENEN.md#domaenen-verwalten
+    type: reference
+    reason: Implementierte Domänenseite und Grenzen der persönlichen Auswahl
+```
+
 Eine Domäne ist ein zusammenhängender Arbeits- und Veröffentlichungsbereich
 mit eigenen Quellen, Entwürfen, Beziehungen, Zugriffsrechten und Ausgaben.
 `doc/` ist zunächst die Dokumentationsdomäne, in der wir das Produktkonzept
@@ -44,7 +46,22 @@ Das Django-Projekt bindet bereits `wissenswiki-django` ein. Die
 Markdown-Dateien sind dabei die lesbare Quelle, nicht bloß eine Kopie in einem
 CMS-Datensatz.
 
+Die [Domänenseite](../features/DOMAENEN.md) kann inzwischen
+leere Datenbaum-Domänen anlegen und je Benutzer eine aktive Domäne speichern.
+Diese Auswahl ist Navigationskontext, keine globale Aktivierung und keine
+Zugriffskontrolle. Eigene Domänenrechte bleiben Zielbild; der gemeinsame
+Arbeitsraum ist weiterhin unabhängig von Dokumentdomänen.
+
 ## Lebenszyklus [lifecycle]
+
+```yaml block-meta
+updated: "2026-11-11 05"
+status: draft
+relations:
+- target: ../features/IMPORT-PIPELINES-AND-DRAFTS.md#pipeline-lifecycle
+  type: reference
+  reason: Implementierter Ablauf zu diesem Konzept
+```
 
 Der fachliche Ablauf soll getrennte Zustände sichtbar machen:
 
@@ -65,6 +82,15 @@ nicht „inhaltlich geprüft“ und „gespeichert“ nicht „öffentlich“.
 
 ## Zusammenarbeit [collaboration]
 
+```yaml block-meta
+updated: "2026-11-11 05"
+status: draft
+relations:
+- target: ../features/IMPORT-PIPELINES-AND-DRAFTS.md#drafts-and-review
+  type: reference
+  reason: Implementierter Ablauf zu diesem Konzept
+```
+
 Eine gemeinsame Arbeitsoberfläche soll Inhalte hierarchisch ordnen, Entwürfe
 und Revisionen nachvollziehbar machen und redaktionelle Arbeit mit anderen
 Personen ermöglichen. Rollen, parallele Bearbeitung, Konfliktauflösung und
@@ -76,6 +102,12 @@ verändert keine freigegebene Revision stillschweigend: Änderungen werden als
 prüfbarer Entwurf mit Bezug auf Ausgangsrevision und Quellen vorgelegt.
 
 ## Veröffentlichung [publishing]
+
+```yaml block-meta
+updated: "2026-11-11 05"
+status: draft
+relations: []
+```
 
 Die fachliche Struktur einer Wissensdomäne soll nicht an eine einzelne
 Weboberfläche gebunden sein. Aus freigegebenen Revisionen kann eine
@@ -90,6 +122,12 @@ Publikationsartefakt und benötigt für die reine Lektüre keine laufende
 Django- oder CMS-Instanz.
 
 ## Heute und Zielbild [current-and-target]
+
+```yaml block-meta
+updated: "2026-11-11 06"
+status: draft
+relations: []
+```
 
 **Heute:** Das Projekt ist ein Django-Hostprojekt mit SQLite,
 Anmeldung/Admin und der eingebundenen Wissenswiki-App. Diese App kann
@@ -107,9 +145,16 @@ sind damit noch nicht umgesetzt.
 explizite Importadapter, Verarbeitungsläufe, Entwürfe, Revisionen,
 Freigaberegeln und reproduzierbare Ausgabe. Das Datenmodell des Prototyps ist ein erster prüfbarer Implementierungsschritt,
 nicht die abschließende Festlegung des Gesamtmodells. Eine
-Hintergrundjob-Technologie bleibt offen.
+Die erste Hintergrundjob-Technologie ist nun ein separater Django-Worker
+mit DB-Queue; siehe [Import und Jobs](IMPORT-UND-JOBS.md).
 
 ## Offene Fragen [open-questions]
+
+```yaml block-meta
+updated: "2026-11-11 05"
+status: draft
+relations: []
+```
 
 - Welche Formate und Speicherquellen gehören in den ersten nutzbaren Import?
 - Soll ein Import synchron starten, oder braucht der erste Umfang bereits

@@ -1,0 +1,43 @@
+{% extends "content/base.html" %}{% load static %}{% block title %}Quellen{% endblock %}{% block content %}
+<h1>Quellen</h1>
+<p>Bereitgestellt → registriert → zerlegt → Textwerkstatt. Das Anzeigen verändert keine Dateien und registriert nichts.</p>
+<p><a href="{% url 'content:files' %}">Dateimengen: Bereitstellung, Originale, Extraktionen</a> · <a href="{% url 'content:jobs' %}">Importjobs</a></p>
+<form method="get" class="panel">
+<label>Pfad / Dateiname <input name="q" value="{{ request.GET.q }}"></label>
+<label>Format <input name="format" value="{{ request.GET.format }}" placeholder="epub, md"></label>
+<label>Registrierter Stand <select name="registered"><option value="">Alle</option><option value="yes"{% if request.GET.registered == "yes" %} selected{% endif %}>Vorhanden</option><option value="no"{% if request.GET.registered == "no" %} selected{% endif %}>Noch nicht registriert</option></select></label>
+{% if request.GET.domain %}<input type="hidden" name="domain" value="{{ request.GET.domain }}">{% endif %}<button>Filtern</button></form>
+{% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+<section class="panel"><h2>Bereitgestellt</h2>
+<p class="muted">Datenwurzel: DOMAIN/FILEFORMAT/DATEI. Unterstützte Formate bis 10 MiB. Symlinks werden nicht importiert.</p>
+<p>Hier bereitgestellte Dateien auswählen und über die Aktion direkt unter dieser Tabelle einreihen.</p>
+<table class="compact-table"><thead><tr><th><input type="checkbox" data-batch-toggle="file-batch" aria-label="Alle bereitgestellten Dateien dieser Seite auswählen"></th><th>Datei</th><th>Domäne / Format</th><th>Bytes</th><th>Registrierung</th></tr></thead><tbody>
+{% for file in page_obj %}<tr><td><input form="file-batch" type="checkbox" name="paths" value="{{ file.relative_path }}" aria-label="{{ file.relative_path }} auswählen"></td><td>{{ file.relative_path }}</td><td>{{ file.domain }} / {{ file.format }}</td><td>{{ file.size }}</td>
+<td>{% if file.registration %}<a href="{% url 'content:source' file.registration.source_id %}">Registrierter Stand</a><br>{% endif %}
+<form method="post" action="{% url 'content:register-source' %}">{% csrf_token %}
+<input type="hidden" name="relative_path" value="{{ file.relative_path }}">
+<button type="submit">{% if file.registration %}Aktuelle Datei prüfen / registrieren{% else %}Als Quelle registrieren{% endif %}</button></form></td></tr>
+{% empty %}<tr><td colspan="5">Keine unterstützten Dateien im Bereitstellungsbaum.</td></tr>{% endfor %}
+</tbody></table>
+<form id="file-batch" data-batch-form method="post" action="{% url 'content:enqueue-batch' %}?{{ request.GET.urlencode }}">{% csrf_token %}
+<label>Aktion für markierte Dateien <select name="kind"><option value="register">Nur registrieren und Original sichern</option><option value="import">Registrieren, zerlegen und Markdown ablegen</option></select></label>
+<p data-batch-status role="status">Dateien in der oberen Tabelle markieren (max. 100).</p>
+<button>Markierte bereitgestellte Dateien einreihen</button></form>
+{% include "content/pagination.html" %}
+<p class="muted">Der registrierte Stand bezeichnet gespeicherte Originalbytes, nicht automatisch den aktuellen Dateiinhalt. Geänderte Bytes erzeugen eine neue Quelle.</p>
+</section>
+<section class="panel"><h2>Registrierte Originalquellen</h2>
+<p>Diese Auswahl verarbeitet nur bereits registrierte Quellen, nicht die bereitgestellten Dateien oben.</p>
+<table class="compact-table"><thead><tr><th><input type="checkbox" data-batch-toggle="source-batch" aria-label="Alle registrierten Quellen dieser Seite auswählen"></th><th>Quelle</th><th>Domäne / Format</th><th>Registriert</th></tr></thead><tbody>
+{% for source in sources %}<tr><td><input form="source-batch" type="checkbox" name="sources" value="{{ source.pk }}" aria-label="{{ source.filename }} auswählen"></td>
+<td><a href="{% url 'content:source' source.pk %}">{{ source.filename }}</a></td><td>{{ source.domain }} / {{ source.format }}</td><td>{{ source.created_at }}</td></tr>
+{% empty %}<tr><td colspan="4">Noch keine Quellen registriert.</td></tr>{% endfor %}</tbody></table>
+<form id="source-batch" data-batch-form method="post" action="{% url 'content:enqueue-batch' %}?{{ request.GET.urlencode }}">{% csrf_token %}
+<label>Aktion für markierte registrierte Quellen <select name="kind"><option value="extract">Zerlegen und ablegen</option><option value="materialize">Originale und vorhandene Extraktionen ablegen / prüfen</option></select></label>
+<p data-batch-status role="status">Quellen in der unteren Tabelle markieren (max. 100).</p>
+<button>Markierte registrierte Quellen einreihen</button></form>
+<p class="muted">{{ sources.paginator.count }} Registrierungen im Filter · Seite {{ sources.number }} / {{ sources.paginator.num_pages }}, einschließlich Uploads.</p>
+{% if sources.has_previous %}<a href="?{{ sources_query }}&amp;sources_page={{ sources.previous_page_number }}">Vorige Quellen</a>{% endif %}
+{% if sources.has_next %}<a href="?{{ sources_query }}&amp;sources_page={{ sources.next_page_number }}">Weitere Quellen</a>{% endif %}</section>
+<script src="{% static 'knext/batch.js' %}" defer></script>
+<p><a href="{% url 'content:index' %}">Zur Importwerkbank</a></p>{% endblock %}

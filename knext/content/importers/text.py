@@ -17,22 +17,14 @@ class TextImporter:
     suffixes = (".md", ".markdown", ".txt")
 
     def extract(self, path: Path) -> Extraction:
+        from ..markdown_document import split_markdown
+
         text = decode_text(path)
         metadata = {}
-        if path.suffix.lower() in {".md", ".markdown"} and text.startswith("---\n"):
-            match = re.match(r"\A---\n(.*?)\n---(?:\n|$)", text, re.DOTALL)
-            if not match:
-                raise ImportFailure("YAML-Header ist nicht mit --- abgeschlossen.")
-            try:
-                metadata = yaml.safe_load(match.group(1))
-                if metadata is None:
-                    metadata = {}
-                if not isinstance(metadata, dict):
-                    raise ImportFailure("Der YAML-Header muss ein Mapping sein.")
-                metadata = json.loads(json.dumps(metadata, default=str, allow_nan=False))
-            except (yaml.YAMLError, ValueError, TypeError, RecursionError) as error:
-                raise ImportFailure("Ungültiger YAML-Header; bitte Struktur prüfen.") from error
-            text = text[match.end():]
+        header = ""
+        if path.suffix.lower() in {".md", ".markdown"}:
+            parsed = split_markdown(text)
+            text, header, metadata = parsed.body, parsed.header, parsed.frontmatter
         if not text.strip():
             raise ImportFailure("Die Datei enthält keinen Inhalt.")
         heading = re.search(r"^#\s+(.+)$", text, re.MULTILINE)
@@ -42,7 +34,7 @@ class TextImporter:
             longest = max((len(item) for item in re.findall(r"`+", text)), default=0)
             fence = "`" * max(3, longest + 1)
             text = f"{fence}\n{text}\n{fence}"
-        return Extraction([ExtractedDocument(title[:255], text, metadata=metadata)])
+        return Extraction([ExtractedDocument(title[:255], text, metadata=metadata, yaml_header=header)])
 
 
 class HtmlImporter:

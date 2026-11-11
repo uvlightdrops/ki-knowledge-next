@@ -1,11 +1,17 @@
 {% extends "content/base.html" %}{% block title %}{{ revision.title }}{% endblock %}
 {% block content %}
 <h1>{{ revision.title }}</h1>
+<p><a href="{% url 'content:editor' document.pk %}">Im neuen Editor öffnen</a></p>
 <p><a href="{% url 'content:run' document.run_id %}">Quelle: {{ document.run.source.filename }}</a>
  · {{ document.run.source.domain }} · {{ document.source_locator }}</p>
 <p class="badge">Entwurf · Revision {{ revision.number }}
 {% if document.approved_revision %} · Freigegeben: Revision {{ document.approved_revision.number }}{% endif %}</p>
 {% for warning in document.run.warnings %}<p class="warning">{{ warning }}</p>{% endfor %}
+<p><a href="{% url 'content:extraction' document.pk %}">Unveränderliche Markdown-Extraktion</a> ·
+<a href="{% url 'content:revision' document.pk revision.number %}">Revision und Vergleich</a></p>
+{% if revision.outline %}<p><a href="{% url 'content:collection' revision.outline.pk %}">Gliederung und Blockressourcen dieser Revision</a></p>{% endif %}
+{% if revision.yaml_header %}<details class="panel"><summary>Dokumentmetadaten · YAML-Header (nicht im Editor)</summary>
+<pre>{{ revision.yaml_header }}</pre><p class="muted">Der Header bleibt bei Textänderungen unverändert erhalten.</p></details>{% endif %}
 <div class="columns"><section class="panel"><h2>Bearbeiten</h2>
 <form method="post">{% csrf_token %}{{ form.as_p }}<button type="submit">Als neue Revision speichern</button></form>
 </section><section class="panel"><h2>Gespeicherte Vorschau · nicht veröffentlicht</h2>
@@ -18,6 +24,6 @@
 {% else %}<p class="muted">Zur Freigabe fehlt die Berechtigung „Darf Inhaltsrevisionen freigeben“.</p>{% endif %}
 {% if document.approved_revision %}<p><a href="{% url 'content:download' document.pk %}">Freigegebene Revision als HTML herunterladen</a></p>{% endif %}
 </section><details class="panel"><summary>Revisionen und Quellmetadaten</summary>
-<ul>{% for item in history %}<li>Revision {{ item.number }} · {{ item.created_at }} · {{ item.created_by }} · {{ item.title }}</li>{% endfor %}</ul>
+<ul>{% for item in history %}<li><a href="{% url 'content:revision' document.pk item.number %}">Revision {{ item.number }}</a> · {{ item.created_at }} · {{ item.created_by }} · {{ item.get_cause_display }} · {{ item.title }}</li>{% endfor %}</ul>
 <pre>{{ revision.metadata }}</pre></details>
 {% endblock %}

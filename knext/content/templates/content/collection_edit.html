@@ -1,0 +1,21 @@
+{% extends "content/base.html" %}{% block title %}Zusammenstellung bearbeiten{% endblock %}{% block content %}
+<h1>{% if collection %}Zusammenstellung bearbeiten{% else %}Zusammenstellung anlegen{% endif %}</h1>
+<p><a href="{% url 'content:resources' %}">Ressourcen-UUIDs nachschlagen</a> · <a href="{% url 'content:relation-types' %}">Relationstypen</a></p>
+<p>Speichern veröffentlicht nichts. Mehrfache Platzierungen derselben Ressource sind erlaubt.
+Nur Hierarchien haben Eltern; Sequenzen und Hierarchien brauchen eindeutige Geschwisterpositionen.</p>
+<details class="panel"><summary>JSON-Vertrag und Beispiel</summary>
+<pre>{
+  "entries": [
+    {"key": "kapitel", "resource": "RESSOURCEN-UUID", "position": 0},
+    {"key": "aspekt", "resource": "WEITERE-UUID", "parent": "kapitel", "position": 0}
+  ],
+  "links": [
+    {"source": "aspekt", "target": "kapitel", "type": "reference", "reason": "Ergänzt das Kapitel"}
+  ]
+}</pre>
+<p><code>key</code>: eindeutiger lokaler Schlüssel aus Buchstaben, Ziffern, Bindestrich/Unterstrich.
+<code>revision</code>: optional die Datenbank-ID einer Dokumentrevision, nicht deren laufende Nummer;
+die IDs stehen in der Ressourcenansicht. Weglassen oder <code>null</code> bindet keinen Textstand.
+<code>parent</code>: lokaler Schlüssel oder <code>null</code>.
+Kanten dürfen zyklisch sein; Eltern nicht. Referenzierte Zusammenstellungen werden nicht automatisch expandiert.</p></details>
+<form method="post">{% csrf_token %}{{ form.as_p }}<button>Atomar speichern</button></form>{% endblock %}

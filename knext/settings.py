@@ -1,24 +1,24 @@
-"""Settings for local development; paths can be overridden with ``KI_NEXT_*`` variables."""
+"""Django settings backed by the project's validated YAML configuration."""
 
-import os
 import secrets
-from pathlib import Path
 
 from django.utils.csp import CSP
 
-BASE_DIR = Path(__file__).resolve().parent.parent
-HOME = Path.home()
+from .config import APP, PROJECT_ROOT, load_config, resolve_path
 
+BASE_DIR = PROJECT_ROOT
+CONFIG = load_config()
+APP_CONFIG = CONFIG["apps"][APP]
+PATHS = APP_CONFIG["paths"]
+DJANGO_CONFIG = APP_CONFIG["django"]
 
-def _env_path(name: str, default: Path) -> str:
-    return str(Path(os.environ.get(name, default)).expanduser())
-
-
-VAR_DIR = Path(_env_path("KI_NEXT_VAR", BASE_DIR / "var"))
+VAR_DIR = resolve_path(PATHS["var"])
 VAR_DIR.mkdir(parents=True, exist_ok=True)
 
-DOC_RELATIONS_DIR = Path(os.environ.get("KI_NEXT_DOC_RELATIONS", VAR_DIR / "doc-relations")).expanduser()
-if "KI_NEXT_DOC_RELATIONS" not in os.environ:
+DOC_RELATIONS_DIR = (
+    resolve_path(PATHS["document_relations"]) if PATHS["document_relations"] else VAR_DIR / "doc-relations"
+)
+if not PATHS["document_relations"]:
     DOC_RELATIONS_DIR.mkdir(parents=True, exist_ok=True)
 
 
@@ -30,9 +30,9 @@ def _secret_key() -> str:
     return path.read_text().strip()
 
 
-SECRET_KEY = _secret_key()
-DEBUG = os.environ.get("KI_NEXT_DEBUG", "1") == "1"
-ALLOWED_HOSTS = [host for host in os.environ.get("KI_NEXT_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if host]
+SECRET_KEY = DJANGO_CONFIG["secret_key"] or _secret_key()
+DEBUG = DJANGO_CONFIG["debug"]
+ALLOWED_HOSTS = DJANGO_CONFIG["allowed_hosts"]
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -53,6 +53,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "knext.domains.DomainContextMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -87,21 +88,25 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = "static/"
+STATIC_ROOT = (
+    resolve_path(DJANGO_CONFIG["static_root"]) if DJANGO_CONFIG["static_root"] else VAR_DIR / "static"
+)
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 LOGIN_URL = "admin:login"
 WISSENSWIKI_NAVIGATION_TEMPLATE = "navigation.html"
 
 # Same data as ./start-wiki in ki-knowledge plus its Markdown domains (former --ki-domains).
 WISSENSWIKI = {
-    "WORKSPACE": _env_path("KI_NEXT_WORKSPACE", HOME / "dev_wiki"),
+    "RELATION_CATALOG": APP_CONFIG["relation_catalog"],
+    "WORKSPACE": str(resolve_path(PATHS["workspace"])),
     "DOMAINS": [{
         "name": "Dokumentation",
-        "source": _env_path("KI_NEXT_DOC", BASE_DIR / "doc"),
+        "source": str(resolve_path(PATHS["documentation"])),
         "relations": str(DOC_RELATIONS_DIR),
     }],
     "MARKDOWN_DATA": {
-        "root": _env_path("KI_NEXT_DATA", HOME / "dev_data" / "ki-knowledge"),
-        "relations": _env_path("KI_NEXT_DATA_RELATIONS", HOME / "dev_wiki_rel_ki"),
+        "root": str(resolve_path(PATHS["data"])),
+        "relations": str(resolve_path(PATHS["data_relations"])),
         "subdir": "md",
         "prefix": "ki:",
         "lenient": True,

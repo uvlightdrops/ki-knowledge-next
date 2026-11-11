@@ -1,0 +1,10 @@
+{% extends "content/base.html" %}
+{% block title %}Ausgabe{% endblock %}
+{% block content %}
+<h1>Ausgabe</h1>
+<section class="panel"><h2>Statische Ausgabe</h2>
+<p>Nur ausdrücklich freigegebene Revisionen. ZIP mit Index und HTML-Seiten; keine automatische Bereitstellung.</p>
+{% for domain in domains %}<p><a class="button" href="{% url 'content:site-download' %}?domain={{ domain|urlencode }}">{{ domain }} als HTML-Site herunterladen</a></p>
+{% empty %}<p class="muted">Noch keine freigegebenen Inhalte{% if app_active_domain %} in dieser Domäne{% endif %}.</p>{% endfor %}
+</section>
+{% endblock %}

@@ -1,0 +1,20 @@
+{% extends "content/base.html" %}{% block title %}{{ collection.resource.title }}{% endblock %}{% block content %}
+<h1>{{ collection.resource.title }}</h1>
+<p>{{ collection.get_kind_display }} · {{ collection.resource.domain }} · Version {{ collection.version }}</p>
+<p><a href="{% url 'content:collections' %}">Zusammenstellungen</a> · <a href="?format=json">JSON</a> ·
+<a href="{% url 'content:resource' collection.pk %}">Ressource und Relationen</a>
+{% if not collection.source_revision_id %} · <a href="{% url 'content:collection-edit' collection.pk %}">Bearbeiten</a>{% endif %}</p>
+<p>{{ collection.description }}</p>
+{% if collection.source_revision_id %}<p class="badge">Quellgliederung · schreibgeschützt · keine eigene Freigabe</p>
+<p><a href="{% url 'content:revision' collection.source_revision.document_id collection.source_revision.number %}">Originalrevision {{ collection.source_revision.number }}</a></p>{% endif %}
+{% if intro %}<details class="panel"><summary>Dokumenttitel und Einleitung</summary><pre>{{ intro }}</pre></details>{% endif %}
+<table><thead><tr><th>Eintrag</th><th>Ressource</th><th>Elternkontext</th><th>Revision</th></tr></thead><tbody>
+{% for row in rows %}<tr><td><code>{{ row.entry.key }}</code></td>
+<td>{{ row.entry.resource.get_kind_display }}: <a href="{% url 'content:resource' row.entry.resource_id %}">{{ row.title }}</a>
+{% if row.entry.resource.kind == "collection" %} · <a href="{% url 'content:collection' row.entry.resource_id %}">Öffnen</a>{% endif %}</td>
+<td>{{ row.entry.parent.key|default:"Wurzel" }} · Tiefe {{ row.depth }}{% if collection.kind == "hierarchy" or collection.kind == "sequence" %} · Position {{ row.entry.position }}{% endif %}</td>
+<td>{% if row.entry.revision_id %}<a href="{% url 'content:revision' row.entry.revision.document_id row.entry.revision.number %}">r{{ row.entry.revision.number }}</a>{% else %}Nicht gebunden{% endif %}</td></tr>
+{% empty %}<tr><td colspan="4">Keine Einträge.</td></tr>{% endfor %}</tbody></table>
+<section class="panel"><h2>Kontextuelle Querverweise</h2>
+{% for link in links %}<p><code>{{ link.source.key }}</code> → {{ link.relation_type }} → <code>{{ link.target.key }}</code> · {{ link.reason }}</p>
+{% empty %}<p>Keine Querverweise.</p>{% endfor %}</section>{% endblock %}

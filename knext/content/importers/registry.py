@@ -14,7 +14,7 @@ from .base import DocumentImporter, Extraction, ImportFailure, MAX_DOCUMENTS, MA
 from .office import DocxImporter, EpubImporter, PdfImporter, SpreadsheetImporter
 from .text import HtmlImporter, StructuredImporter, TextImporter
 
-PIPELINE_VERSION = "content-import-v1"
+PIPELINE_VERSION = "content-import-v2"
 
 
 class DocumentImporterRegistry:

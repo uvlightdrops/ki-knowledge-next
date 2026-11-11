@@ -10,6 +10,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client
 from django.urls import reverse
 
+from knext.content.importers.base import ImportFailure
 from knext.content.models import ContentDocument, ImportRun, SourceAsset
 from knext.content.services import RevisionConflict, approve, import_upload, revise
 
@@ -62,12 +63,8 @@ def test_duplicate_is_idempotent_per_domain_and_preserves_edited_draft(writer):
     assert created and other.source_id != run.source_id
 
 
-def test_failed_import_is_visible_and_retry_does_not_create_drafts(client):
-    response = client.post(reverse("content:import"), {
-        "domain": "Dokumentation", "file": SimpleUploadedFile("bad.pdf", b"not a pdf"),
-    })
-    assert response.status_code == 302
-    run = ImportRun.objects.get()
+def test_failed_import_is_visible_and_retry_does_not_create_drafts(client, writer):
+    run, _ = import_upload(SimpleUploadedFile("bad.pdf", b"not a pdf"), "Dokumentation", writer)
     assert run.status == ImportRun.Status.FAILED and run.error
     assert not run.documents.exists()
     response = client.post(reverse("content:retry", args=[run.pk]))
@@ -78,13 +75,13 @@ def test_failed_import_is_visible_and_retry_does_not_create_drafts(client):
     assert "Fehlgeschlagen" in client.get(response.url).content.decode()
 
 
-def test_unsupported_format_and_invalid_domain_do_not_register_sources(client):
+def test_unsupported_format_and_invalid_domain_do_not_register_sources(writer):
     for domain, file in [
         ("Dokumentation", SimpleUploadedFile("code.exe", b"x")),
-        ("not-configured", upload()),
+        ("", upload()),
     ]:
-        response = client.post(reverse("content:import"), {"domain": domain, "file": file})
-        assert response.status_code == 200 and response.context["form"].errors
+        with pytest.raises(ImportFailure):
+            import_upload(file, domain, writer)
     assert not SourceAsset.objects.exists()
 
 
@@ -140,6 +137,32 @@ def test_export_contains_only_approved_revisions_and_scopes_domain(client, write
     assert client.get(reverse("content:site-download"), {"domain": "Unknown"}).status_code == 404
 
 
+def test_output_page_requires_login_and_shows_empty_state(client):
+    url = reverse("content:output")
+    assert Client().get(url).status_code == 302
+    response = client.get(url)
+    assert response.status_code == 200
+    assert "Noch keine freigegebenen Inhalte" in response.content.decode()
+    assert list(response.context["domains"]) == []
+
+
+def test_output_page_lists_only_approved_domains_and_preserves_filter(client, writer):
+    publisher = User.objects.create_superuser("output-publisher")
+    document = imported(writer)
+    approve(document, expected=1, user=publisher)
+    other_run, _ = import_upload(upload("other.md", "# Other\n\nBody"), "Elsewhere", writer)
+    approve(other_run.documents.get(), expected=1, user=publisher)
+    import_upload(upload("draft.md", "# Draft"), "Drafts", writer)
+    url = reverse("content:output")
+    response = client.get(url)
+    assert list(response.context["domains"]) == ["Dokumentation", "Elsewhere"]
+    filtered = client.get(url, {"domain": "Dokumentation"})
+    assert list(filtered.context["domains"]) == ["Dokumentation"]
+    assert f'{reverse("content:site-download")}?domain=Dokumentation' in filtered.content.decode()
+    assert "Elsewhere als HTML-Site" not in filtered.content.decode()
+    assert "domains" not in client.get(reverse("content:index")).context
+
+
 def test_draft_download_is_rejected_and_preview_is_sanitized(client, writer):
     document = imported(writer)
     revise(document, expected=1, title="<script>alert(1)</script>",
@@ -161,9 +184,12 @@ def test_login_csrf_and_workbench(client, writer):
     assert anonymous.get(reverse("content:document", args=[document.pk])).status_code == 302
     protected = Client(enforce_csrf_checks=True)
     protected.force_login(writer)
-    assert protected.post(reverse("content:import"), {"domain": "Dokumentation", "file": upload()}).status_code == 403
+    assert protected.post(reverse("content:enqueue-batch"), {"kind": "import", "paths": ["Books/md/notes.md"]}).status_code == 403
     html = client.get(reverse("content:index")).content.decode()
-    assert "Original" in html and "Wissensnetz" in html and "Import starten" in html
+    assert "Original" in html and "Wissensnetz" in html and "für Importjobs auswählen" in html
+    assert 'type="file"' not in html
+    assert client.get("/content/import/").status_code == 404
+    assert client.post("/content/import/", {"domain": "Dokumentation", "file": upload()}).status_code == 404
     assert reverse("content:document", args=[document.pk]) in html
 
 
@@ -189,13 +215,13 @@ def test_invalid_revision_fields_are_reported(client, writer):
         revise(document, expected=99, title="Conflict", body="no", user=writer)
 
 
-def test_workbench_offers_each_approved_domain_once(client, writer):
+def test_output_page_offers_each_approved_domain_once(client, writer):
     publisher = User.objects.create_superuser("publisher")
     for name in ("first.md", "second.md"):
         run, _ = import_upload(upload(name, f"# {name}\n\nBody"), "Dokumentation", writer)
         approve(run.documents.get(), expected=1, user=publisher)
 
-    response = client.get(reverse("content:index"))
+    response = client.get(reverse("content:output"))
 
     assert list(response.context["domains"]) == ["Dokumentation"]
     assert response.content.decode().count("als HTML-Site herunterladen") == 1

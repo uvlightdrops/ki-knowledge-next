@@ -20,6 +20,7 @@ class ExtractedDocument:
     body: str
     locator: str = ""
     metadata: dict = field(default_factory=dict)
+    yaml_header: str = ""
 
 
 @dataclass

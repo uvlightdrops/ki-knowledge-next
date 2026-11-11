@@ -1,0 +1,7 @@
+{% extends "content/base.html" %}{% load static %}{% block title %}Importbatch{% endblock %}{% block content %}
+<h1>{{ batch.label }}</h1><p>Batch {{ batch.pk }} · {{ batch.created_at }} · {{ batch.created_by }}</p>
+<p>Ein Job pro ausgewählter Datei/Quelle. Teilerfolge bleiben sichtbar; kein pauschales „Batch erfolgreich“.</p>
+{% include "content/job_progress.html" %}
+<div id="job-results" data-job-live>{% include "content/job_table.html" %}{% include "content/pagination.html" %}</div>
+<script src="{% static 'content/jobs.js' %}" defer></script>
+<p><a href="{% url 'content:jobs' %}">Alle Jobs</a></p>{% endblock %}

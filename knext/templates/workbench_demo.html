@@ -1,0 +1,20 @@
+{% load static %}<!doctype html>
+<html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Textwerkstatt-Demo · ki-knowledge next</title>
+<link rel="stylesheet" href="{% static 'knext/theme.css' %}">
+{% for css in workbench_styles %}<link rel="stylesheet" href="{% static css %}">{% endfor %}
+</head><body>{% include "navigation.html" %}
+<main>
+<h1>Textwerkstatt-Demo</h1>
+<p class="demo-notice" role="note"><strong>Originaloberfläche mit synthetischen Beispielen.</strong>
+Keine echten Quellen oder Next-Dokumente; kein Schreibzugriff und keine KI-Verbindung.
+Die Arbeitskopie lässt sich im Browserpuffer bearbeiten, aber nicht speichern.
+Schreibaktionen melden ausdrücklich eine Sperre; beim Neuladen gehen Eingaben verloren.
+Der echte Editor bleibt in der <a href="{% url 'content:documents' %}">Textwerkstatt</a>.
+<a href="{% static 'django_site/workbench/THIRD-PARTY-NOTICES.txt' %}">Lizenzhinweise</a>.</p>
+{% csrf_token %}
+{{ bootstrap|json_script:"workbench-bootstrap" }}
+<div id="workbench-root"></div>
+</main><script type="module" src="{% static workbench_script %}"></script>
+</body></html>

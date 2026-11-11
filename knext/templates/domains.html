@@ -1,0 +1,17 @@
+{% extends "content/base.html" %}{% block title %}Domänen{% endblock %}
+{% block content %}
+<h1>Domänen</h1>
+<p>Die aktive Domäne ist deine persönliche Auswahl, keine globale Freigabe und keine Zugriffsschranke.
+Andere Nutzer behalten ihre Auswahl. Der Arbeitsraum bleibt der gemeinsame, domänenunabhängige Blockeditor.</p>
+{% for name in app_available_domains %}
+<section class="panel"><strong>{{ name }}</strong>{% if name == app_active_domain %} · persönlich aktiv{% endif %}
+<form method="post" action="{% url 'select-domain' %}">{% csrf_token %}
+<input type="hidden" name="domain" value="{{ name }}"><input type="hidden" name="next" value="{% url 'domains' %}">
+<button type="submit">Als aktiv auswählen</button></form></section>
+{% empty %}<p>Keine Dokumentdomänen eingerichtet.</p>{% endfor %}
+{% if user.is_staff %}<section class="panel"><h2>Domäne anlegen</h2>
+<form method="post">{% csrf_token %}{{ form.as_p }}<button type="submit">Anlegen</button></form>
+<p>Legt ein leeres NAME/md-Verzeichnis und einen Next-Domäneneintrag an.
+Vorhandene Verzeichnisse werden nicht übernommen oder überschrieben. Noch kein Import.</p></section>
+{% else %}<p>Neue Domänen können nur Administratoren anlegen.</p>{% endif %}
+{% endblock %}

@@ -1,0 +1,5 @@
+{% extends "content/base.html" %}{% block title %}Relationstypen{% endblock %}{% block content %}
+<h1>Relationstypen</h1><p><a href="{% url 'content:collections' %}">Zusammenstellungen</a> · <a href="{% url 'content:resources' %}">Ressourcen</a></p>
+{% for type in types %}<section class="panel"><h2>{{ type.label }} · <code>{{ type.key }}</code></h2><p>{{ type.description }}</p>{% if not type.enabled %}<p>Nur lesbar; nicht für neue Beziehungen freigegeben.</p>{% endif %}</section>{% empty %}<p>Keine Relationstypen.</p>{% endfor %}
+<section class="panel"><h2>Typ ergänzen</h2><p>Definition und Begründung sind verpflichtend. Bestehende Schlüssel werden nicht umgedeutet.</p>
+<form method="post">{% csrf_token %}{{ form.as_p }}<button>Relationstyp anlegen</button></form></section>{% endblock %}

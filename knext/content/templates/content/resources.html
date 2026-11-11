@@ -1,0 +1,10 @@
+{% extends "content/base.html" %}{% block title %}Ressourcen{% endblock %}{% block content %}
+<h1>Ressourcen</h1>
+<p><a href="{% url 'content:collections' %}">Zusammenstellungen</a> · <a href="{% url 'content:folder-create' %}">Ordnerressource anlegen</a></p>
+<form method="get"><label>Titel <input name="q" value="{{ request.GET.q }}"></label>
+<label>Typ <select name="kind"><option value="">Alle</option>{% for value,label in kinds %}<option value="{{ value }}"{% if request.GET.kind == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
+{% if request.GET.domain %}<input type="hidden" name="domain" value="{{ request.GET.domain }}">{% endif %}<button>Filtern</button></form>
+<table><thead><tr><th>Ressource</th><th>Typ</th><th>Domäne</th><th>UUID</th></tr></thead><tbody>
+{% for item in resources %}<tr><td><a href="{% url 'content:resource' item.pk %}">{{ item.title }}</a></td><td>{{ item.get_kind_display }}</td><td>{{ item.domain }}</td><td><code>{{ item.pk }}</code></td></tr>
+{% empty %}<tr><td colspan="4">Keine Ressourcen. Vorhandene Revisionen mit <code>python manage.py index_content</code> indexieren.</td></tr>{% endfor %}
+</tbody></table>{% include "content/pagination.html" %}{% endblock %}

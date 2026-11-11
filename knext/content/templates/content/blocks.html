@@ -1,0 +1,9 @@
+{% extends "content/base.html" %}{% block title %}Extraktionsblöcke{% endblock %}{% block content %}
+<h1>{{ extraction.title }} · Blöcke</h1>
+<p>Unveränderlicher Ausgangsstand, keine aktuelle redaktionelle Revision. {{ blocks|length }} Gliederungsblöcke einschließlich tieferer Ebenen; Überschriften in Codebeispielen werden nicht zerlegt.</p>
+<section class="panel"><h2>Dokumentmetadaten</h2><pre>{{ frontmatter }}</pre><h3>Adaptermetadaten</h3><pre>{{ adapter_metadata }}</pre></section>
+{% if intro %}<section class="panel"><h2>Einleitung</h2><pre>{{ intro }}</pre></section>{% endif %}
+{% for block in blocks %}<section class="panel" id="{{ block.explicit_id|default:forloop.counter }}"><h2>{{ block.title }}</h2>
+<p>H{{ block.level }} · Zeilen {{ block.start_line }}–{{ block.end_line }} · Block-ID: {{ block.explicit_id|default:"Keine explizite ID im Original" }}</p><pre>{{ block.body }}</pre></section>{% endfor %}
+<p>Lokale <code>yaml block-meta</code>-Attribute bleiben beim jeweiligen Block sichtbar; sie werden nicht automatisch geerbt oder ergänzt.</p>
+<a href="{% url 'content:extraction' document.pk %}">Extraktionsnachweis</a>{% endblock %}

@@ -1,0 +1,29 @@
+{% extends "content/base.html" %}{% block title %}Dateibestand{% endblock %}{% block content %}
+<h1>Dateibestand</h1>
+<p>Bereitstellung, registrierte Originalkopien und unveränderliche Extraktionen. Zählung ohne Lesen der Dateiinhalte; Symlinks und versteckte Dateien werden ausgelassen.</p>
+{% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+{% for error in errors %}<p class="error" role="alert">{{ error }} Die Zählwerte sind unvollständig.</p>{% endfor %}
+<section class="panel"><h2>Mengen je Domäne und Bereich</h2>
+<p>{{ total_files }} Dateien · {{ total_bytes }} Bytes (einschließlich JSON-Manifeste).</p>
+<table><thead><tr><th>Domäne</th><th>Bereich / Ordner</th><th>Dateien</th><th>Bytes</th></tr></thead><tbody>
+{% for row in summary %}<tr><td>{{ row.domain }}</td><td>{{ row.area }} / {{ row.format }}</td><td>{{ row.files }}</td><td>{{ row.bytes }}</td></tr>
+{% empty %}<tr><td colspan="4">Keine Dateien.</td></tr>{% endfor %}</tbody></table></section>
+<form method="get" class="panel">
+<label>Pfad suchen <input name="q" value="{{ request.GET.q }}"></label>
+<label>Bereich <select name="area"><option value="">Alle</option>
+<option value="provisioned"{% if request.GET.area == "provisioned" %} selected{% endif %}>Bereitgestellt</option>
+<option value="original"{% if request.GET.area == "original" %} selected{% endif %}>Originalkopien</option>
+<option value="extraction"{% if request.GET.area == "extraction" %} selected{% endif %}>Extraktionen</option>
+</select></label>
+<label>Formatordner <input name="format" value="{{ request.GET.format }}" placeholder="epub, md, orig"></label>
+{% if request.GET.domain %}<input type="hidden" name="domain" value="{{ request.GET.domain }}">{% endif %}
+<button>Filtern</button></form>
+<table><thead><tr><th>Pfad</th><th>Bereich</th><th>Bytes</th><th>Herkunft</th></tr></thead><tbody>
+{% for file in page_obj %}<tr><td><code>{{ file.relative_path }}</code></td><td>{{ file.area }}</td><td>{{ file.size }}</td>
+<td>{% if file.artifact %}<a href="{% url 'content:source' file.artifact.source_id %}">Quelle</a>
+{% if file.artifact.run_id %} · <a href="{% url 'content:run' file.artifact.run_id %}">Extraktion</a>{% endif %}
+ · <a href="{% url 'content:artifact' file.artifact.pk %}">Ansehen / Download</a>
+{% else %}Nicht im Artefaktindex{% endif %}</td></tr>{% endfor %}</tbody></table>
+{% include "content/pagination.html" %}
+<p><a href="{% url 'content:inventory' %}">Importquellen und Batch-Auswahl</a> · <a href="{% url 'content:jobs' %}">Jobs</a></p>
+{% endblock %}

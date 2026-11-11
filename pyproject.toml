@@ -17,17 +17,38 @@ dependencies = [
     "Markdown>=3.7",
     "bleach>=6.2",
     "defusedxml>=0.7",
+    "yaml-cfg-wizard>=0.3.0",
+    "jsonschema>=4",
+    "PyYAML>=6",
 ]
 
 [project.optional-dependencies]
-test = ["pytest>=8", "pytest-django>=4.9"]
+test = ["pytest>=8", "pytest-django>=4.9", "stackctl"]
+deploy = ["stackctl"]
 
 [tool.setuptools.packages.find]
 include = ["knext*"]
 
 [tool.setuptools.package-data]
-"knext.content" = ["templates/content/*.html", "static/content/*.css", "static/knext/*"]
-"knext" = ["templates/*.html", "templates/admin/*.html"]
+"knext.content" = ["templates/content/*.html", "static/content/*.css", "static/content/*.js", "static/knext/*", "static/django_site/workbench/*", "static/django_site/workbench/assets/*"]
+"knext" = ["templates/*.html", "templates/admin/*.html", "schema/*.yaml"]
+
+[tool.stackctl]
+config_loader = "knext.config:load_config"
+config_key = "stack"
+
+[[tool.stackctl.siblings]]
+name = "yaml-cfg-wizard"
+path = "yaml_cfg_wizard"
+url = "https://github.com/uvlightdrops/yaml-cfg-wizard.git"
+
+[[tool.stackctl.siblings]]
+name = "wissenswiki-core"
+url = "https://github.com/uvlightdrops/wissenswiki-core.git"
+
+[[tool.stackctl.siblings]]
+name = "wissenswiki-django"
+url = "https://github.com/uvlightdrops/wissenswiki-django.git"
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "knext.settings"

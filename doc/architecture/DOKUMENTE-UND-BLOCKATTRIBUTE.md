@@ -5,24 +5,19 @@ agent_project: ki-knowledge-next
 scope: architecture
 purpose: "Unterscheidet Dokumente, Abschnitte und die Herkunft ihrer Attribute im Wissensnetz und schlägt eine klarere Darstellung sowie Anzeige-Presets vor."
 created: "2026-11-10T07:47:00+01:00"
-updated: "2026-11-10T09:04:00+01:00"
-update_reason: "Umgesetzte Attributansichten und offene Frage zur Entstehung von Dokumenten ergänzt"
+updated: "2026-11-11 05"
+update_reason: "Beschlossene kontextbezogene Gliederungen mit dem Content-Modell verknüpft"
 status: draft
-semantic_blocks:
-  - ausgangspunkt
-  - bestehendes-verhalten
-  - dokument-und-abschnitt
-  - attributebenen
-  - anzeige-presets
-  - knoten-und-beziehungen
-  - inhaltsanzeige
-  - beispiel
-  - umsetzung-und-pruefung
-  - offene-entscheidungen
 relations:
+  - target: "CONTENT-MODELL.md"
+    type: reference
+    reason: "Beschlossenes DB-Modell für Ressourcen und Gliederungen"
   - target: "README.md"
     type: parent
     reason: "Architekturindex mit diesem Konzept"
+  - target: "ALTREPO-UEBERNAHME.md"
+    type: reference
+    reason: "Übernahme alter Ressourcenmodelle ohne Verlust der Dokument-/Blocksemantik"
 ---
 
 # Dokumente und Blockattribute
@@ -36,6 +31,12 @@ Die weitergehenden Vorschläge zu Dokumentknoten und Einleitung bleiben offen.
 
 ## Ausgangspunkt [ausgangspunkt]
 
+```yaml block-meta
+updated: "2026-11-11 05"
+status: active
+relations: []
+```
+
 Das Netz stellt unterschiedliche Dinge mit ähnlichen Blasen und einer
 gemeinsamen Attributtabelle dar. Dadurch erscheinen etwa die ID eines
 Abschnitts und das Projekt aus dem YAML-Header wie gleichartige Eigenschaften.
@@ -48,6 +49,12 @@ eine Beziehung?** Die Oberfläche sollte diese Fragen beantworten können, ohne
 dass man die Quelldatei oder das Speicherformat kennt.
 
 ## Bestehendes Verhalten [bestehendes-verhalten]
+
+```yaml block-meta
+updated: "2026-11-11 05"
+status: active
+relations: []
+```
 
 Geprüft an `wissenswiki-core` am 2026-11-10:
 
@@ -75,6 +82,12 @@ als dokumentweiter Kontext klassifiziert werden, weil sie in YAML gespeichert
 sind. Entscheidend ist das fachliche Bezugsobjekt, nicht das Dateiformat.
 
 ## Dokument und Abschnitt [dokument-und-abschnitt]
+
+```yaml block-meta
+updated: "2026-11-11 14"
+status: draft
+relations: []
+```
 
 **Vorschlag:** Die Anwendung unterscheidet ausdrücklich drei Begriffe:
 
@@ -109,13 +122,21 @@ Aufgliedern eines übergeordneten Themas in Aspekte. Die fertige Textfolge
 allein macht diese unterschiedlichen Entstehungsweisen nicht transparent;
 digitale Medien lösen diese Unklarheit nicht automatisch.
 
-**Noch offene Folgerung:** Leseabfolge, Zugehörigkeit und Entstehungszusammenhang
-sind möglicherweise verschiedene Beziehungen. Vor einer Modellentscheidung
-sollten wir klären, was ein Gesamtdokument fachlich zusammenhält und ob seine
-Entstehung überhaupt ausdrücklich festgehalten werden soll. Daraus werden
-vorerst weder neue Relationstypen noch automatische Ableitungen aus H1/H2.
+**Inzwischen beschlossene Folgerung:** Leseabfolge und Gliederung werden im
+[Content-Modell](CONTENT-MODELL.md) als kontextbezogene Zusammenstellungen
+gespeichert, getrennt von fachlichen Relationen. Der DB-basierte
+Werkstattindex berücksichtigt auch H3 bis H6 und vergibt pfadunabhängige
+Ressourcen-IDs. Das oben beschriebene Verhalten der eingebundenen,
+dateibasierten Wissenswiki bleibt davon getrennt. Aus einer Gliederung wird
+keine fachliche Abhängigkeit oder Entstehungsgeschichte abgeleitet.
 
 ## Attributebenen [attributebenen]
+
+```yaml block-meta
+updated: "2026-11-11 05"
+status: draft
+relations: []
+```
 
 **Vorschlag:** Die Attributtabelle gruppiert Angaben nach ihrem Bezug:
 
@@ -130,8 +151,12 @@ gezeigt, nicht als dort eigens gepflegte oder fachlich vererbte Werte. Ein
 dokumentweiter `status: draft` besagt beispielsweise nicht, dass jeder
 Abschnitt eine unabhängig gepflegte Statusentscheidung besitzt.
 
-Wenn später Abschnittsmetadaten hinzukommen, muss ihre Herkunft ausdrücklich
-angegeben werden. Ein lokaler Abschnittsstatus und ein Dokumentstatus können
+Die Dokumentation pflegt nun Abschnittsmetadaten als sichtbare
+`yaml block-meta`-Blöcke unmittelbar unter der H2-Überschrift:
+`updated`, `status` und `relations`. Ihre strukturierte Auswertung im
+Wissensnetz ist damit noch nicht implementiert. Bei deren Anschluss muss
+ihre Herkunft ausdrücklich angegeben werden.
+Ein lokaler Abschnittsstatus und ein Dokumentstatus können
 nebeneinander bestehen; eine automatische Überschreibungs- oder
 Vererbungsregel ist hier nicht beschlossen.
 
@@ -141,6 +166,12 @@ steht deshalb „nicht anwendbar“ bei der lokalen Block-ID des Dokuments.
 Text zu unterscheiden.
 
 ## Anzeige-Presets [anzeige-presets]
+
+```yaml block-meta
+updated: "2026-11-11 05"
+status: draft
+relations: []
+```
 
 **Umgesetzt für Einstellungen pro Domäne im Browser:**
 
@@ -181,6 +212,12 @@ Die Auswahl gilt sowohl für den Vergleich als auch für die Einzelansicht.
 
 ## Knoten und Beziehungen [knoten-und-beziehungen]
 
+```yaml block-meta
+updated: "2026-11-11 05"
+status: draft
+relations: []
+```
+
 **Empfehlung:** Den Dokumentknoten behalten, aber klar als Dokument
 kennzeichnen, beispielsweise durch ein sichtbares Typetikett und eine andere
 Form oder Kontur. Farbe allein sollte den Typ nicht vermitteln, weil sie
@@ -207,6 +244,12 @@ Begründung oder Zustimmung.
 
 ## Inhaltsanzeige [inhaltsanzeige]
 
+```yaml block-meta
+updated: "2026-11-11 05"
+status: draft
+relations: []
+```
+
 Das Widget „Blockinhalt“ sollte den Typ der Auswahl kenntlich machen:
 
 - Bei einem Abschnitt: Abschnittstitel und vollständiger Abschnittstext.
@@ -227,6 +270,12 @@ saubere Unterscheidung im Parser nötig; bloßes Abschneiden der ersten
 Textzeile wäre bei fehlendem H1 oder Codebeispielen fehlerhaft.
 
 ## Beispiel [beispiel]
+
+```yaml block-meta
+updated: "2026-11-11 05"
+status: draft
+relations: []
+```
 
 Eine Datei `ZUSAMMENARBEIT.md` enthält:
 
@@ -257,6 +306,12 @@ dessen Identität.
 
 ## Umsetzung und Prüfung [umsetzung-und-pruefung]
 
+```yaml block-meta
+updated: "2026-11-11 05"
+status: draft
+relations: []
+```
+
 Die Gruppierung vorhandener Attribute und die drei Presets sind umgesetzt,
 einschließlich vollständiger Attributpfade und Übergang bestehender
 Browserauswahlen. Die darüber hinausgehenden Vorschläge bleiben Entwurf.
@@ -280,6 +335,12 @@ ausgeblendete Dokumentknoten mit bestehenden Relationen; eigene Wiki-Blöcke
 mit ihren tatsächlich blockbezogenen YAML-Metadaten.
 
 ## Offene Entscheidungen [offene-entscheidungen]
+
+```yaml block-meta
+updated: "2026-11-11 05"
+status: draft
+relations: []
+```
 
 Soll das Netz standardmäßig Dokumente und Abschnitte zeigen oder bevorzugt
 nur Abschnitte? Welche Unterscheidung der Knotentypen ist am lesbarsten?

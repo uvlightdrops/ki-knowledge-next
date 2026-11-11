@@ -6,14 +6,14 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
-from django.views.generic import DetailView, FormView, ListView
+from django.views.generic import DetailView, ListView, TemplateView
+from knext.domains import domain_aliases
 
-from .forms import ApprovalForm, RevisionForm, UploadForm
+from .forms import ApprovalForm, RevisionForm
 from .importers.base import ImportFailure
-from .importers.registry import DocumentImporterRegistry
 from .models import ContentDocument, ImportRun
 from .rendering import build_site, render_output, render_revision
-from .services import RevisionConflict, approve, import_upload, process_run, revise
+from .services import RevisionConflict, approve, process_run, revise
 
 
 class WorkbenchView(LoginRequiredMixin, ListView):
@@ -22,31 +22,58 @@ class WorkbenchView(LoginRequiredMixin, ListView):
     paginate_by = 30
 
     def get_queryset(self):
-        return ImportRun.objects.select_related("source").defer("source__data").prefetch_related("documents")
+        runs = ImportRun.objects.select_related("source").defer("source__data").prefetch_related("documents")
+        if self.request.active_domain:
+            runs = runs.filter(source__domain__in=domain_aliases(self.request.active_domain))
+        if self.request.GET.get("q"):
+            runs = runs.filter(source__filename__icontains=self.request.GET["q"])
+        if self.request.GET.get("status"):
+            runs = runs.filter(status=self.request.GET["status"])
+        return runs
 
     def get_context_data(self, **kwargs):
+        query = self.request.GET.copy()
+        query.pop("page", None)
         return super().get_context_data(
-            form=UploadForm(), extensions=DocumentImporterRegistry().extensions,
-            domains=ContentDocument.objects.filter(approved_revision__isnull=False)
-            .order_by("run__source__domain").values_list("run__source__domain", flat=True).distinct(), **kwargs,
+            statuses=ImportRun.Status,
+            pagination_query=query.urlencode(), **kwargs,
         )
 
 
-class ImportView(LoginRequiredMixin, FormView):
-    form_class = UploadForm
-    template_name = "content/upload.html"
+class OutputView(LoginRequiredMixin, TemplateView):
+    template_name = "content/output_index.html"
 
-    def form_valid(self, form):
-        try:
-            run, created = import_upload(
-                form.cleaned_data["file"], form.cleaned_data["domain"], self.request.user,
-            )
-        except ImportFailure as error:
-            form.add_error("file", str(error))
-            return self.form_invalid(form)
-        if not created:
-            messages.info(self.request, "Identische Quelle bereits erfasst; vorhandener Lauf wird angezeigt.")
-        return redirect("content:run", pk=run.pk)
+    def get_context_data(self, **kwargs):
+        approved = ContentDocument.objects.filter(approved_revision__isnull=False)
+        if self.request.active_domain:
+            approved = approved.filter(run__source__domain__in=domain_aliases(self.request.active_domain))
+        return super().get_context_data(
+            domains=approved.order_by("run__source__domain")
+            .values_list("run__source__domain", flat=True).distinct(), **kwargs,
+        )
+
+
+class DocumentListView(LoginRequiredMixin, ListView):
+    template_name = "content/documents.html"
+    context_object_name = "documents"
+    paginate_by = 30
+
+    def get_queryset(self):
+        documents = ContentDocument.objects.select_related(
+            "run__source", "approved_revision",
+        ).defer("run__source__data").order_by("-created_at", "id")
+        if self.request.active_domain:
+            documents = documents.filter(run__source__domain__in=domain_aliases(self.request.active_domain))
+        if self.request.GET.get("q"):
+            documents = documents.filter(title__icontains=self.request.GET["q"])
+        if self.request.GET.get("approved") in {"yes", "no"}:
+            documents = documents.filter(approved_revision__isnull=self.request.GET["approved"] == "no")
+        return documents
+
+    def get_context_data(self, **kwargs):
+        query = self.request.GET.copy()
+        query.pop("page", None)
+        return super().get_context_data(pagination_query=query.urlencode(), **kwargs)
 
 
 class RunView(LoginRequiredMixin, DetailView):
@@ -91,6 +118,9 @@ def document(request: HttpRequest, pk) -> HttpResponse:
         if form.is_valid():
             try:
                 revise(item, user=request.user, **form.cleaned_data)
+            except ImportFailure as error:
+                form.add_error("body", str(error))
+                return render(request, "content/document.html", _document_context(item, form), status=400)
             except RevisionConflict as error:
                 form.add_error(None, str(error))
                 item.refresh_from_db()

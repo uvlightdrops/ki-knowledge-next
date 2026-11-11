@@ -1,0 +1,13 @@
+<form id="job-cancel-form" method="post" action="{% url 'content:cancel-selected-jobs' %}{% if request.GET %}?{{ request.GET.urlencode }}{% endif %}">{% csrf_token %}
+{% if batch %}<input type="hidden" name="batch" value="{{ batch.pk }}">{% endif %}
+<button type="button" data-job-select-all>Alle wartenden Jobs dieser Seite markieren / abwählen</button>
+<button type="submit">Markierte Jobs abbrechen</button>
+<p class="muted">Nur eigene wartende Jobs; Administratoren können alle wartenden Jobs auswählen. Laufende Jobs werden nicht unterbrochen.</p>
+<table><thead><tr><th>Auswahl</th><th>Job / Aktion</th><th>Domäne / Quelle</th><th>Status</th><th>Versuche</th><th>Batch</th></tr></thead><tbody>
+{% for item in page_obj %}<tr>
+<td>{% if item.status == "queued" %}{% if user.is_staff or user.pk == item.batch.created_by_id %}<input type="checkbox" name="jobs" value="{{ item.pk }}" aria-label="{% firstof item.relative_path item.source.filename item.pk %} auswählen">{% endif %}{% endif %}</td>
+<td><a href="{% url 'content:job' item.pk %}">{{ item.get_kind_display }}</a></td>
+<td>{{ item.domain }} · {% if item.source_id %}<a href="{% url 'content:source' item.source_id %}">{{ item.source.filename }}</a>{% else %}{{ item.relative_path }}{% endif %}</td>
+<td>{{ item.get_status_display }}{% if item.error %}<p class="error">{{ item.error }}</p>{% endif %}</td><td>{{ item.attempts }}</td>
+<td><a href="{% url 'content:batch' item.batch_id %}">{{ item.batch.label }}</a></td></tr>
+{% empty %}<tr><td colspan="6">Keine Jobs.</td></tr>{% endfor %}</tbody></table></form>

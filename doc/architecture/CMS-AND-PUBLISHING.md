@@ -5,15 +5,9 @@ agent_project: ki-knowledge-next
 scope: architecture
 purpose: "Trennt Redaktionsoberfläche, Wagtail-Option und statische Publikation und hält eine vorläufige Empfehlung für die Technologieentscheidung fest."
 created: "2026-11-09T18:13:00+01:00"
-updated: "2026-11-09T18:13:00+01:00"
-update_reason: "Wagtail-Frage und statisches Ausgabeziel als Architekturentscheidung erfasst"
+updated: "2026-11-11 05"
+update_reason: "Lokale Blockmetadaten und gezielte Blockrelationen ergänzt; keine doppelte Headerablage"
 status: draft
-semantic_blocks:
-  - publishing-model
-  - editorial-interface
-  - wagtail-assessment
-  - recommendation
-  - decision-gates
 relations:
   - target: "README.md"
     type: parent
@@ -24,11 +18,23 @@ relations:
   - target: "../features/IMPORT-PIPELINES-AND-DRAFTS.md"
     type: reference
     reason: "Nutzerablauf bis zur statischen Veröffentlichung"
+  - target: "AUSGABE-UND-PUBLIKATION.md"
+    type: reference
+    reason: "Übernahme des Ausgabebestands, autarker Buildkern und Baumexport bis PDF"
 ---
 
 # CMS und Veröffentlichung
 
 ## Publikationsmodell [publishing-model]
+
+```yaml block-meta
+updated: "2026-11-11 05"
+status: draft
+relations:
+- target: ../features/IMPORT-PIPELINES-AND-DRAFTS.md#static-output
+  type: reference
+  reason: Implementierter Ablauf zu diesem Konzept
+```
 
 Die redaktionelle Anwendung und die veröffentlichte Site haben
 unterschiedliche Aufgaben. Die Django-Anwendung verwaltet Anmeldung,
@@ -42,6 +48,12 @@ sind daraus abgeleitete Publikation, kein zweiter Ort, an dem Inhalte parallel
 bearbeitet werden.
 
 ## Redaktionsoberfläche [editorial-interface]
+
+```yaml block-meta
+updated: "2026-11-11 05"
+status: draft
+relations: []
+```
 
 Für den Redaktionsablauf werden mindestens benötigt:
 
@@ -57,6 +69,12 @@ Diese Anforderungen beschreiben den Bedarf, nicht bereits entschiedene
 Modellklassen oder eine bestimmte CMS-Implementierung.
 
 ## Wagtail-Einordnung [wagtail-assessment]
+
+```yaml block-meta
+updated: "2026-11-11 05"
+status: active
+relations: []
+```
 
 **Projektstand:** Das neue Projekt nutzt Django 6 und `wissenswiki-django`.
 Wagtail ist weder in `INSTALLED_APPS` registriert noch eine deklarierte
@@ -79,6 +97,12 @@ kann die Ausgabe bauen, ersetzt aber keine kollaborative CMS-Oberfläche.
 
 ## Vorläufige Empfehlung [recommendation]
 
+```yaml block-meta
+updated: "2026-11-11 05"
+status: draft
+relations: []
+```
+
 **Wagtail jetzt nicht als gesetzt behandeln.** Zunächst den fachlichen
 Redaktionsablauf, die Inhaltsstruktur und den statischen Export unabhängig
 vom CMS festlegen. Danach Wagtail mit einem kleinen, realistischen
@@ -91,6 +115,12 @@ bleibt der Wissenskern CMS-neutral und der statische HTML-Build ein eigener
 Ausgabeschritt.
 
 ## Entscheidungskriterien [decision-gates]
+
+```yaml block-meta
+updated: "2026-11-11 05"
+status: draft
+relations: []
+```
 
 Eine Wagtail-Entscheidung wird fällig, sobald ein Prototyp mit echten
 Redaktionsfällen folgende Fragen beantwortet:
@@ -109,3 +139,6 @@ Redaktionsfällen folgende Fragen beantwortet:
 Bis dahin lautet der Status **offen; kein Ersatz- oder Migrationsbeschluss**.
 Das Produktziel und die Prozessgrenzen sind im [Domänen- und
 Lebenszykluskonzept](KNOWLEDGE-DOMAIN-AND-LIFECYCLE.md) beschrieben.
+Die Übernahme der alten Generatoren und der gemeinsame Weg zu eingebetteten
+Ansichten, autarken Sites und PDF stehen in
+[Ausgabe und Publikation](AUSGABE-UND-PUBLIKATION.md).

@@ -1,0 +1,21 @@
+{% extends "content/base.html" %}{% load static %}{% block title %}Importjob{% endblock %}{% block content %}
+<h1>{{ job.get_kind_display }}</h1>
+{% include "content/job_progress.html" %}
+<div id="job-results" data-job-live>
+<p>{{ job.pk }} · {{ job.get_status_display }} · {{ job.domain }}</p>
+{% if job.error %}<p role="alert" class="error">{{ job.error }}</p>{% endif %}
+<dl><dt>Festgelegte Eingabe</dt><dd>{{ job.relative_path }} · SHA-256 <code>{{ job.expected_sha256 }}</code></dd>
+<dt>Pipeline</dt><dd>{{ job.pipeline_version }}</dd></dl>
+{% if job.source_id %}<p><a href="{% url 'content:source' job.source_id %}">Registrierte Quelle</a></p>{% endif %}
+{% if job.run_id %}<p><a href="{% url 'content:run' job.run_id %}">Verarbeitungslauf und Dokumente</a></p>{% endif %}
+{% for path in job.result.paths %}<p><code>{{ path }}</code></p>{% endfor %}
+{% if user.is_staff or user.pk == job.batch.created_by_id %}
+{% if job.status == "failed" or job.status == "queued" %}<form method="post" action="{% url 'content:job-control' job.pk %}">{% csrf_token %}
+{% if job.status == "failed" %}<button name="action" value="retry">Erneut einreihen</button>{% else %}<button name="action" value="cancel">Wartenden Job abbrechen</button>{% endif %}</form>{% endif %}
+{% endif %}
+<section class="panel"><h2>Versuche</h2>
+{% for attempt in attempts %}<p>{{ attempt.number }} · {{ attempt.worker }} · {{ attempt.status }} · {{ attempt.started_at }} / {{ attempt.finished_at|default:"läuft" }}</p>
+{% if attempt.error %}<p class="error">{{ attempt.error }}</p>{% endif %}
+{% empty %}<p>Noch kein Ausführungsversuch.</p>{% endfor %}</section></div>
+<script src="{% static 'content/jobs.js' %}" defer></script>
+<a href="{% url 'content:batch' job.batch_id %}">Batch</a>{% endblock %}

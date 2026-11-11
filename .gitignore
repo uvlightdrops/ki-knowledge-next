@@ -4,3 +4,12 @@ build/
 .venv/
 .pytest_cache/
 var/
+ki.yaml
+creds.yaml
+config/creds.yaml
+config/runtime/
+config/stages/.active_stage
+config/profiles/.active_profile
+.env
+.env.*
+!.env.example

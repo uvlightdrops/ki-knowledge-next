@@ -1,0 +1,16 @@
+{% extends "content/base.html" %}{% block title %}Revision {{ revision.number }} · {{ revision.title }}{% endblock %}{% block content %}
+<h1>{{ revision.title }}</h1><p class="badge">Historischer Stand · Revision {{ revision.number }} · schreibgeschützt</p>
+<p><a href="{% url 'content:document' document.pk %}">Textwerkstatt</a> · <a href="?format=markdown">Revision als Markdown</a></p>
+{% if revision.outline %}<p><a href="{% url 'content:collection' revision.outline.pk %}">Gliederung dieser Revision</a></p>{% endif %}
+<section class="panel"><h2>Revisionsnachweis</h2>
+<p>{{ revision.created_at }} · {{ revision.created_by }} · {{ revision.get_cause_display }}</p>
+<p>SHA-256: <code>{{ revision.content_sha256 }}</code></p>
+{% if revision.parent %}<p>Vorgänger: <a href="{% url 'content:revision' document.pk revision.parent.number %}">Revision {{ revision.parent.number }}</a></p>{% endif %}
+{% if revision.restored_from %}<p>Wiederhergestellt aus Revision {{ revision.restored_from.number }}.</p>{% endif %}
+<form method="post" action="{% url 'content:restore' document.pk revision.number %}">{% csrf_token %}{{ restore_form }}
+<button type="submit">Diesen Stand als neue Revision übernehmen</button></form>
+<p class="muted">Vorhandene Revisionen und Freigabe bleiben unverändert.</p></section>
+{% if revision.yaml_header %}<details class="panel"><summary>Separater YAML-Header</summary><pre>{{ revision.yaml_header }}</pre></details>{% endif %}
+<section class="panel"><h2>Vorschau</h2><article class="prose">{{ body_html }}</article></section>
+<section class="panel"><h2>Textvergleich zum Vorgänger</h2><pre>{{ diff|default:"Keine Textänderung. Titeländerungen stehen im Revisionsnachweis." }}</pre></section>
+{% endblock %}

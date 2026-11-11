@@ -1,0 +1,12 @@
+{% extends "content/base.html" %}{% load static %}{% block title %}Importjobs{% endblock %}{% block content %}
+<h1>Importjobs</h1>
+{% include "content/job_progress.html" %}
+<form method="get" class="panel">
+<label>Pfad suchen <input name="q" value="{{ request.GET.q }}"></label>
+<label>Status <select name="status"><option value="">Alle</option>{% for value,label in statuses.choices %}<option value="{{ value }}"{% if request.GET.status == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
+<label>Aktion <select name="kind"><option value="">Alle</option>{% for value,label in kinds.choices %}<option value="{{ value }}"{% if request.GET.kind == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
+{% if request.GET.domain %}<input type="hidden" name="domain" value="{{ request.GET.domain }}">{% endif %}<button>Filtern</button></form>
+<div id="job-results" data-job-live>{% include "content/job_table.html" %}
+{% include "content/pagination.html" %}</div>
+<script src="{% static 'content/jobs.js' %}" defer></script>
+{% endblock %}

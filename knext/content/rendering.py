@@ -4,28 +4,15 @@ import io
 import json
 from zipfile import ZIP_DEFLATED, ZipFile
 
-import bleach
-import markdown
 from bs4 import BeautifulSoup
 from django.template.loader import render_to_string
 from django.utils.safestring import mark_safe
+from wissenswiki_core.rendering import render_markdown as render_core_markdown
 
 from .models import ContentDocument, ContentRevision
 
-ALLOWED_TAGS = {
-    "p", "br", "hr", "h1", "h2", "h3", "h4", "h5", "h6", "strong", "em",
-    "blockquote", "ul", "ol", "li", "pre", "code", "a", "table", "thead",
-    "tbody", "tr", "th", "td", "del",
-}
-
-
 def render_markdown(body: str) -> str:
-    html = markdown.markdown(body, extensions=["fenced_code", "tables"])
-    clean = bleach.clean(
-        html, tags=ALLOWED_TAGS, attributes={"a": ["href", "title"]},
-        protocols=["http", "https", "mailto"], strip=True,
-    )
-    return mark_safe(clean)
+    return mark_safe(render_core_markdown(body))
 
 
 def render_revision(revision: ContentRevision) -> str:
@@ -48,7 +35,7 @@ def build_site(domain: str) -> bytes:
     """Create an attachment only; never deploy or include unapproved drafts."""
     documents = list(ContentDocument.objects.filter(
         run__source__domain=domain, approved_revision__isnull=False,
-    ).select_related("approved_revision", "run__source").defer("run__source__data").order_by("created_at", "id"))
+    ).select_related("approved_revision", "run__source", "extraction").defer("run__source__data").order_by("created_at", "id"))
     navigation = [
         {"href": f"{document.pk}.html", "title": document.approved_revision.title}
         for document in documents
@@ -64,6 +51,9 @@ def build_site(domain: str) -> bytes:
             "schema": "ki-knowledge-site-v1", "domain": domain, "documents": [{
                 "file": f"{document.pk}.html", "document": str(document.pk),
                 "revision": document.approved_revision.number,
+                "revision_id": document.approved_revision.pk,
+                "revision_sha256": document.approved_revision.content_sha256,
+                "extraction_sha256": document.extraction.sha256,
                 "source_sha256": document.run.source.sha256,
                 "pipeline": document.run.pipeline_version,
                 "approved_at": document.approved_at.isoformat(),

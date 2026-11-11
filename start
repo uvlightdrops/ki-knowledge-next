@@ -1,7 +1,46 @@
 #!/bin/sh
-# Lokal starten: ./start [adresse:port]; Standard 127.0.0.1:8780.
+# Lokal starten: ./start [adresse:port] oder ./start --lan LAN-IP.
 set -e
 ROOT=$(dirname "$(readlink -f "$0")")
 cd "$ROOT"
+if [ "${1:-}" = "--lan" ]; then
+    if [ "$#" -ne 2 ]; then
+        echo "Verwendung: ./start --lan LAN-IP" >&2
+        exit 2
+    fi
+    KI_NEXT_ALLOWED_HOSTS=$(.venv/bin/python - "$2" <<'PY'
+import ipaddress
+import sys
+
+from knext.config import APP, load_config
+
+try:
+    address = ipaddress.IPv4Address(sys.argv[1])
+except ipaddress.AddressValueError:
+    sys.exit("LAN-IP muss eine gültige IPv4-Adresse sein.")
+if address.is_unspecified or address.is_multicast or address.is_loopback:
+    sys.exit("LAN-IP muss die erreichbare IPv4-Adresse dieses Rechners sein.")
+hosts = load_config()["apps"][APP]["django"]["allowed_hosts"]
+if "*" in hosts:
+    sys.exit("LAN-Start: allowed_hosts darf keinen Wildcard-Eintrag enthalten.")
+print(",".join(dict.fromkeys([*hosts, "localhost", "127.0.0.1", str(address)])))
+PY
+    )
+    export KI_NEXT_ALLOWED_HOSTS
+    .venv/bin/python - "$2" <<'PY'
+import sys
+
+from knext.config import APP, load_config
+
+hosts = load_config()["apps"][APP]["django"]["allowed_hosts"]
+if sys.argv[1] not in hosts or "*" in hosts:
+    sys.exit("LAN-IP wird durch einen höheren Konfigurationslayer überschrieben. allowed_hosts prüfen.")
+PY
+    echo "LAN-Entwicklungsbetrieb: http://$2:8780/ — nur im vertrauenswürdigen LAN, nicht öffentlich."
+    set -- "0.0.0.0:8780"
+elif [ "$#" -gt 1 ] || [ "${1#--}" != "${1:-}" ]; then
+    echo "Verwendung: ./start [adresse:port] oder ./start --lan LAN-IP" >&2
+    exit 2
+fi
 .venv/bin/python manage.py migrate --noinput
-exec .venv/bin/python manage.py runserver "${1:-127.0.0.1:8780}"
+exec .venv/bin/python -m knext.devserver "${1:-127.0.0.1:8780}"

@@ -1,16 +1,47 @@
 from django.urls import path
 
-from . import views
+from . import editor_views, graph_views, job_views, revision_views, source_views, views
 
 app_name = "content"
 
 urlpatterns = [
+    path("editor/", editor_views.EditorListView.as_view(), name="editor-index"),
+    path("editor/preview/", editor_views.preview, name="editor-preview"),
+    path("editor/<uuid:pk>/", editor_views.editor, name="editor"),
+    path("editor/<uuid:pk>/restore/", editor_views.restore_backup, name="editor-restore"),
+    path("collections/", graph_views.CollectionListView.as_view(), name="collections"),
+    path("collections/new/", graph_views.edit_collection, name="collection-create"),
+    path("collections/<uuid:pk>/", graph_views.collection, name="collection"),
+    path("collections/<uuid:pk>/edit/", graph_views.edit_collection, name="collection-edit"),
+    path("resources/", graph_views.ResourceListView.as_view(), name="resources"),
+    path("resources/folder/", graph_views.create_folder, name="folder-create"),
+    path("resources/<uuid:pk>/", graph_views.resource, name="resource"),
+    path("relation-types/", graph_views.relation_types, name="relation-types"),
+    path("relations/<int:pk>/delete/", graph_views.delete_relation, name="relation-delete"),
     path("", views.WorkbenchView.as_view(), name="index"),
-    path("import/", views.ImportView.as_view(), name="import"),
+    path("output/", views.OutputView.as_view(), name="output"),
+    path("documents/", views.DocumentListView.as_view(), name="documents"),
+    path("sources/", source_views.inventory, name="inventory"),
+    path("sources/register/", source_views.register, name="register-source"),
+    path("files/", job_views.files, name="files"),
+    path("artifacts/<int:pk>/", job_views.artifact, name="artifact"),
+    path("jobs/", job_views.jobs, name="jobs"),
+    path("jobs/batch/", job_views.enqueue_batch, name="enqueue-batch"),
+    path("jobs/cancel-selected/", job_views.cancel_selected, name="cancel-selected-jobs"),
+    path("jobs/<uuid:pk>/", job_views.job, name="job"),
+    path("jobs/<uuid:pk>/control/", job_views.control, name="job-control"),
+    path("batches/<uuid:pk>/", job_views.batch, name="batch"),
+    path("runs/<uuid:pk>/materialize/", job_views.materialize, name="materialize"),
+    path("sources/<uuid:pk>/", source_views.source, name="source"),
+    path("sources/<uuid:pk>/extract/", source_views.extract, name="extract-source"),
     path("runs/<uuid:pk>/", views.RunView.as_view(), name="run"),
     path("runs/<uuid:pk>/retry/", views.retry, name="retry"),
     path("documents/<uuid:pk>/", views.document, name="document"),
     path("documents/<uuid:pk>/approve/", views.approve_revision, name="approve"),
     path("documents/<uuid:pk>/download/", views.download, name="download"),
+    path("documents/<uuid:pk>/extraction/", revision_views.extraction, name="extraction"),
+    path("documents/<uuid:pk>/extraction/blocks/", revision_views.extraction_blocks, name="extraction-blocks"),
+    path("documents/<uuid:pk>/revisions/<int:number>/", revision_views.revision, name="revision"),
+    path("documents/<uuid:pk>/revisions/<int:number>/restore/", revision_views.restore_revision, name="restore"),
     path("export/", views.site_download, name="site-download"),
 ]

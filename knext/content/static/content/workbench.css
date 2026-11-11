@@ -2,16 +2,18 @@
 body{margin:0;background:#141d21;color:#e5eeec;font:16px/1.6 system-ui,sans-serif}
 a{color:#9edfd0}header{display:flex;flex-wrap:wrap;justify-content:space-between;gap:1rem;padding:1rem 2rem;background:#202e33}
 nav{display:flex;flex-wrap:wrap;gap:1.2rem}.brand{font-weight:750;text-decoration:none}
-main{max-width:1450px;margin:auto;padding:1.5rem 2rem}h1{font-size:clamp(1.7rem,3vw,2.5rem);line-height:1.2}
+main{max-width:1450px;margin:auto;padding:1.5rem 2rem}h1{font-size:1.45rem;line-height:1.3;margin:.3rem 0 .8rem}
 h2{font-size:1.15rem;margin-top:0}.panel{padding:1.3rem;margin:1.2rem 0;background:#202e33;border:1px solid #415651;border-radius:.7rem;min-width:0}
 .columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.2rem}
 .columns .panel{margin-top:0}.badge{color:#9edfd0;font-size:.85rem;letter-spacing:.04em}
 input,select,textarea,button,.button{font:inherit}input,select,textarea{max-width:100%;padding:.55rem;background:#141d21;color:#e5eeec;border:1px solid #718a83;border-radius:.3rem}
 input[type=text],textarea{width:100%}textarea{font:14px/1.5 ui-monospace,monospace;resize:vertical}
+input[type=checkbox]{width:auto}
 label{display:block;font-weight:600;margin-bottom:.3rem}button,.button{display:inline-block;padding:.55rem 1rem;border:1px solid #9edfd0;border-radius:.3rem;background:#264b43;color:#edfffa;cursor:pointer;text-decoration:none}
 button:hover,.button:hover{background:#356859}.muted,small{color:#b4c6bf}.message,.warning,.error,.errorlist{padding:.75rem;border-left:3px solid #9edfd0;background:#182522}
 .warning{border-color:#e4b85c}.error,.errorlist{border-color:#f38c80;color:#ffbdb2}
-table{width:100%;border-collapse:collapse;text-align:left}th,td{padding:.7rem;border-bottom:1px solid #415651;vertical-align:top}
+table{width:100%;max-width:100%;overflow-x:auto;display:block;border-collapse:collapse;text-align:left}th,td{padding:.7rem;border-bottom:1px solid #415651;vertical-align:top}
+.compact-table th,.compact-table td{padding:.35rem .5rem}.compact-table button{padding:.2rem .5rem;font-size:.85rem}
 pre,code{overflow-wrap:anywhere;white-space:pre-wrap}pre{padding:.8rem;background:#141d21;overflow:auto}
 .prose{overflow-wrap:anywhere}.prose table{font-size:.9rem}dt{font-weight:700}dd{margin:0 0 .6rem}
 @media(max-width:950px){.columns{grid-template-columns:1fr}main{padding:1rem}header{padding:1rem}table{font-size:.9rem}}

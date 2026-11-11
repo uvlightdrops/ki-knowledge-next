@@ -1,0 +1,6 @@
+apps:
+  ki_knowledge_next:
+    django:
+      debug: true
+stack:
+  target: local

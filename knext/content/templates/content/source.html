@@ -1,0 +1,23 @@
+{% extends "content/base.html" %}{% block title %}{{ source.filename }}{% endblock %}{% block content %}
+<h1>{{ source.filename }}</h1><p class="badge">Registrierte Originalquelle · unveränderlicher Byte-Snapshot</p>
+<section class="panel"><h2>Herkunft</h2>
+<dl><dt>Domäne / Format</dt><dd>{{ source.domain }} / {{ source.format }}</dd>
+<dt>Quelle</dt><dd><code>{{ source.pk }}</code></dd>
+<dt>SHA-256</dt><dd><code>{{ source.sha256 }}</code></dd>
+<dt>Größe / Registrierung</dt><dd>{{ source.size }} Bytes · {{ source.created_at }} · {{ source.uploaded_by }}</dd></dl>
+{% for registration in registrations %}<p>{{ registration.relative_path }} · {{ registration.registered_at }} · {{ registration.registered_by }}</p>
+{% empty %}<p>Per Upload bereitgestellt.</p>{% endfor %}
+<p>Weitere Verarbeitung verwendet nur die gespeicherten Bytes, auch wenn die bereitgestellte Datei geändert oder entfernt wird.</p>
+<form method="post" action="{% url 'content:extract-source' source.pk %}">{% csrf_token %}
+<button type="submit">In Markdown zerlegen</button></form></section>
+<section class="panel"><h2>Verarbeitungsläufe</h2>
+{% for run in runs %}<p><a href="{% url 'content:run' run.pk %}">{{ run.pipeline_version }}</a> · {{ run.get_status_display }}</p>
+{% empty %}<p>Registriert, noch nicht zerlegt.</p>{% endfor %}</section>
+<section class="panel"><h2>Dateisystem-Abbilder</h2>
+{% for artifact in source.artifacts.all %}<p><code>{{ artifact.relative_path }}</code>
+ · <a href="{% url 'content:artifact' artifact.pk %}">Ansehen / Download</a></p>
+{% empty %}<p>Noch kein verzeichnetes Abbild. Ein Ablagejob muss vom Worker ausgeführt werden.</p>{% endfor %}
+<form method="post" action="{% url 'content:enqueue-batch' %}">{% csrf_token %}
+<input type="hidden" name="sources" value="{{ source.pk }}"><input type="hidden" name="kind" value="materialize">
+<button>Original und vorhandene Extraktionen sichern / prüfen</button></form></section>
+<p><a href="{% url 'content:inventory' %}">Alle Quellen</a></p>{% endblock %}

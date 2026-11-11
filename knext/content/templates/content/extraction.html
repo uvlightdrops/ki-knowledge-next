@@ -1,0 +1,12 @@
+{% extends "content/base.html" %}{% block title %}Extraktion · {{ extraction.title }}{% endblock %}{% block content %}
+<h1>{{ extraction.title }}</h1><p class="badge">Unveränderliche Markdown-Extraktion</p>
+<p><a href="{% url 'content:document' document.pk %}">Textwerkstatt</a> ·
+<a href="?format=markdown">Originalextraktion als Markdown</a></p>
+<p><a href="{% url 'content:extraction-blocks' document.pk %}">Blöcke und Metadaten durchsuchen</a></p>
+<section class="panel"><h2>Nachweis</h2>
+<p>Quelle <a href="{% url 'content:source' document.run.source_id %}">{{ document.run.source.filename }}</a> · {{ document.run.pipeline_version }} · {{ document.source_locator }}</p>
+<p>Markdown SHA-256: <code>{{ extraction.sha256 }}</code></p>
+<p>Extraktion am {{ extraction.created_at }}. Redaktionelle Änderungen werden ausschließlich als neue Revisionen gespeichert.</p>
+<pre>{{ extraction.metadata }}</pre></section>
+<section class="panel"><h2>Extrahiertes Markdown einschließlich YAML-Header</h2><pre>{{ extraction.markdown }}</pre></section>
+{% endblock %}

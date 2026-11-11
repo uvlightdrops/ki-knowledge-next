@@ -1,0 +1,10 @@
+<section class="panel" id="job-progress" data-job-live aria-live="polite">
+{% if worker_error %}<p role="alert" class="error">{{ worker_error }}</p>
+{% elif worker_running %}<p>Importworker läuft.</p>
+{% else %}<p role="alert" class="error">Kein Importworker aktiv. Wartende Jobs werden nicht ausgeführt.</p>
+<p>Lokal mit <code>./start</code> starten; bei direktem Django-/IDE-Start zusätzlich <code>.venv/bin/python manage.py content_worker</code> ausführen.</p>{% endif %}
+<p>{{ job_finished }} von {{ job_total }} Jobs beendet (einschließlich Fehler und Abbrüche).</p>
+{% if job_total %}<progress value="{{ job_finished }}" max="{{ job_total }}">{{ job_finished }} / {{ job_total }}</progress>{% endif %}
+<p>{% for label,count in job_counts %}{{ label }}: {{ count }}{% if not forloop.last %} · {% endif %}{% endfor %}</p>
+</section>
+<p id="job-refresh-status" role="status">Mit JavaScript werden Status und Ergebnisse alle 3 Sekunden aktualisiert. <a href="">Jetzt aktualisieren</a></p>

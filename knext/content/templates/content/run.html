@@ -2,12 +2,20 @@
 <h1>{{ run.source.filename }}</h1><section class="panel"><h2>{{ run.get_status_display }}</h2>
 <dl><dt>Domäne</dt><dd>{{ run.source.domain }}</dd><dt>Pipeline / Adapter</dt><dd>{{ run.pipeline_version }} / {{ run.adapter }}</dd>
 <dt>Originalquelle</dt><dd>{{ run.source.size }} Bytes · SHA-256 <code>{{ run.source.sha256 }}</code></dd>
+<dt>Registrierung</dt><dd><a href="{% url 'content:source' run.source_id %}">Gespeicherte Originalquelle</a></dd>
 <dt>Versuche</dt><dd>{{ run.attempts }}</dd></dl>
 {% if run.error %}<p class="error" role="alert">{{ run.error }}</p>{% endif %}
 {% for warning in run.warnings %}<p class="warning">{{ warning }}</p>{% endfor %}
 {% if run.status == "failed" %}<form method="post" action="{% url 'content:retry' run.pk %}">{% csrf_token %}
 <button type="submit">Verarbeitung erneut versuchen</button></form>{% endif %}
-</section><section class="panel"><h2>Extrahierte Entwürfe</h2>
+</section><section class="panel"><h2>Extraktionen und Textwerkstatt</h2>
+{% if run.status == "succeeded" %}<p>Die Dateisystem-Ablage erfolgt als eigener Job, nicht als neue redaktionelle Revision.</p>
+<form method="post" action="{% url 'content:materialize' run.pk %}">{% csrf_token %}<button>Ausgangsstand im Dateisystem sichern / prüfen</button></form>
+<p><a href="{% url 'content:jobs' %}">Ablagejobs</a> · <a href="{% url 'content:files' %}">Dateibestand</a></p>
+{% for artifact in run.artifacts.all %}<p><code>{{ artifact.relative_path }}</code></p>{% endfor %}
+{% endif %}
 {% for document in run.documents.all %}<p><a href="{% url 'content:document' document.pk %}">{{ document.title }}</a>
+ · <a href="{% url 'content:extraction' document.pk %}">Unveränderlicher Ausgangsstand</a>
+ · <a href="{% url 'content:extraction-blocks' document.pk %}">Blöcke / Metadaten</a>
 {% if document.source_locator %}<small> · {{ document.source_locator }}</small>{% endif %}</p>
 {% empty %}<p>Kein Entwurf erstellt.</p>{% endfor %}</section>{% endblock %}

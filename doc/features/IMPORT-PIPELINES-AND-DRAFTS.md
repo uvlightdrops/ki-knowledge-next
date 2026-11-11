@@ -3,19 +3,11 @@ title: "Importpipelines und Entwürfe"
 project: ki-knowledge-next
 agent_project: ki-knowledge-next
 scope: features
-purpose: "Beschreibt die gewünschten Nutzerabläufe für heterogene Quellen, pipelinebasierte Verarbeitung, gemeinsame Entwürfe und kontrollierte Veröffentlichung."
+purpose: "Beschreibt die implementierten Importformate, Verarbeitungsläufe und freigabegebundene HTML-/ZIP-Ausgabe."
 created: "2026-11-09T18:13:00+01:00"
-updated: "2026-11-10T20:10:00+01:00"
-update_reason: "Ungültige nichtendliche Zahlen in Markdown-Metadaten als Importfehler abgegrenzt"
-status: draft
-semantic_blocks:
-  - scope
-  - import-prototype
-  - format-adapters
-  - pipeline-lifecycle
-  - drafts-and-review
-  - failure-handling
-  - static-output
+updated: "2026-11-11 17"
+update_reason: "Einzelupload entfernt und statische Ausgabe auf eigener OUTPUT-Seite beschrieben"
+status: active
 relations:
   - target: "README.md"
     type: parent
@@ -26,16 +18,30 @@ relations:
   - target: "../architecture/CMS-AND-PUBLISHING.md"
     type: reference
     reason: "CMS-Abwägung und Ausgabegrenzen"
+  - target: "../architecture/QUELLEN-UND-TEXTWERKSTATT.md"
+    type: depends-on
+    reason: "Verbindliches Quellen-, Extraktions- und Revisionsmodell"
+  - target: "QUELLEN-UND-TEXTWERKSTATT.md"
+    type: reference
+    reason: "Bedienung der Quellenregistrierung und Revisionshistorie"
+  - target: "../architecture/AUSGABE-UND-PUBLIKATION.md"
+    type: depends-on
+    reason: "Publikationsgrenze und spätere hierarchische Ausgabe"
 ---
 
 # Importpipelines und Entwürfe
 
 ## Umfang [scope]
 
-Das Feature führt Quellen von der Erfassung bis zu einem prüfbaren
-redaktionellen Ergebnis. Unterschiedliche Formate sollen über geeignete
-Adapter in einen gemeinsamen Ablauf kommen, statt je Format eine eigene
-unverbundene Importoberfläche zu erhalten.
+```yaml block-meta
+updated: "2026-11-11 17"
+status: active
+relations: []
+```
+
+Diese Beschreibung dokumentiert die vorhandenen Adapter, Dateibestandsimporte,
+Laufzustände und statischen Downloads. Bedienung von Registrierung und
+Textbearbeitung steht in [Quellen und Textwerkstatt](QUELLEN-UND-TEXTWERKSTATT.md).
 
 Die Pipeline erzeugt aus einer Quelle zunächst extrahierte und normalisierte
 Arbeitsdaten. Sie darf daraus nicht automatisch einen bestätigten
@@ -45,36 +51,32 @@ beschreibt die Systemgrenzen.
 
 ## Import-Prototyp [import-prototype]
 
+```yaml block-meta
+updated: "2026-11-11 17"
+status: active
+relations: []
+```
+
 **Implementierter Stand, noch kein produktiver Gesamtworkflow:** Die
 Django-App `knext.content` stellt unter `/content/` eine gemeinsame
 Importwerkbank mit Anmeldung bereit. Das Wissensnetz bleibt unverändert.
 Dieser Prototyp verwendet bewusst noch kein Wagtail; die CMS-Entscheidung
 bleibt davon unabhängig.
 
-### Content-Modell
+Dateien und registrierte Quellen werden unter `/content/sources/` per
+Mehrfachauswahl für Importjobs eingereiht. Einzeldatei-Uploadformular und
+Upload-Endpunkt sind entfernt. Originale werden in der Datenbank gespeichert,
+nicht in einem öffentlichen Uploadordner. Das führende
+[Quellen- und Revisionsmodell](../architecture/QUELLEN-UND-TEXTWERKSTATT.md)
+trennt Original, Extraktion, Arbeitsstand und Freigabe.
 
-| Klasse | Verantwortung |
-|---|---|
-| `SourceAsset` | Originalbytes, Dateiname, Domänenname, SHA-256, Größe und hochladender Nutzer |
-| `ImportRun` | Quelle, Pipeline-/Adapterversion, Zustand, Versuche, Warnungen und konkrete Fehler |
-| `ContentDocument` | Stabile UUID, Bezug auf Lauf und Quellstelle, aktuelle Revisionsnummer und Freigabe |
-| `ContentRevision` | Neue Version von Titel und Markdown-Text, Quellmetadaten, Bearbeiter und Zeitpunkt |
+## Formatadapter [format-adapters]
 
-Die Domänenauswahl stammt aus den konfigurierten Wissenswiki-Domänen.
-Originale werden nicht in einem öffentlich erreichbaren Uploadordner abgelegt,
-sondern in der Datenbank gespeichert. Gleiche Originalbytes innerhalb einer
-Domäne und Pipeline-Version führen zum vorhandenen Lauf; bereits bearbeitete
-Entwürfe werden nicht überschrieben. Ein fehlgeschlagener Lauf kann bewusst
-erneut gestartet werden. Ein erfolgreicher Import ist keine Freigabe.
-
-Jeder Speichervorgang erzeugt eine neue Inhaltsrevision. Die erwartete
-Revisionsnummer verhindert stilles Überschreiben paralleler Änderungen.
-Die Freigabe referenziert genau eine Revision und hält Nutzer und Zeitpunkt
-fest. Spätere Änderungen verändern diese freigegebene Fassung nicht.
-Das Bearbeiten der extrahierten Metadaten, vollständige Revisionsvergleiche
-und Rollback sind noch nicht Bestandteil der Oberfläche.
-
-### Formatklassen und Grenzen
+```yaml block-meta
+updated: "2026-11-11 17"
+status: active
+relations: []
+```
 
 Die `DocumentImporterRegistry` wählt formatbezogene Adapter. Die Registry-
 Struktur orientiert sich am alten `ki_knowledge/infosite/importer.py`.
@@ -86,7 +88,7 @@ Inhalt zurückgegeben.
 
 | Adapter | Heute unterstützt | Sichtbare Einschränkung |
 |---|---|---|
-| `TextImporter` | `.md`, `.markdown`, `.txt`; UTF-8 mit optionalem BOM | Markdown-Frontmatter als Dokumentmetadaten, Textdateien wörtlich |
+| `TextImporter` | `.md`, `.markdown`, `.txt`; UTF-8 mit optionalem BOM | Markdown-Frontmatter separat vom Editortext; Textdateien wörtlich |
 | `HtmlImporter` | Lokale `.html` und `.htm` | Lesbarer Text; keine aktiven Inhalte, Medien oder Layoutübernahme |
 | `StructuredImporter` | CSV/TSV, JSON, YAML | Werteorientierte Vorschau, noch keine fachliche Feldzuordnung; CSV bis 10.000 Zeilen und 100 Spalten |
 | `PdfImporter` | `.pdf` mit Textebene und Seitenmarkern | Maximal 200 Seiten; keine OCR, verschlüsselte oder reine Bild-PDFs schlagen mit Hinweis fehl |
@@ -94,7 +96,7 @@ Inhalt zurückgegeben.
 | `SpreadsheetImporter` | `.xlsx`, ein Dokument je Blatt | Gespeicherte Zellwerte, keine Formelberechnung; insgesamt 10.000 Zeilen, 100 Spalten je Blatt |
 | `EpubImporter` | Textuelle EPUB-2/3-Kapitel in Lesereihenfolge | Ein Dokument je Kapitel, Herkunft erhalten; Medien fehlen, Kapitelverknüpfungen noch nicht für die Ausgabe umgeschrieben |
 
-Uploads sind auf 10 MiB begrenzt, Ergebnisse auf insgesamt zwei Millionen
+Quelldateien sind auf 10 MiB begrenzt, Ergebnisse auf insgesamt zwei Millionen
 Zeichen und 300 Dokumente je Lauf. ZIP-basierte Formate werden vor Verarbeitung
 auf Eintragszahl, entpackte Größe und Kompressionsverhältnis geprüft.
 Nichtendliche Zahlen wie `.nan` und `.inf` in Markdown-Frontmatter werden
@@ -103,108 +105,116 @@ Das ist kein Ersatz für isolierte Worker oder harte Laufzeit-/Speicherlimits.
 Scans, Bild-OCR, ODS, alte binäre Office-Formate, Ontologien, Jira-Anbindung
 und Webabruf sind noch nicht implementiert.
 
-### Ansichten und Ausgabe
-
-`WorkbenchView`, `ImportView` und `RunView` zeigen Quellen, Uploads und
-Verarbeitungsläufe. Die Dokumentansicht kombiniert einen Markdown-Editor,
-eine bereinigte Vorschau der gespeicherten Revision sowie Freigabe und
-Revisionsübersicht. Vorschauen bleiben ausdrücklich unveröffentlicht.
-
-HTML wird vor Anzeige von unerlaubten Tags, Attributen und URL-Protokollen
-bereinigt. Nur Nutzer mit `content.publish_content` können freigeben.
-Alle angemeldeten Nutzer teilen im Prototyp dieselben Inhalte: Es gibt noch
-keine Domänen-ACLs, Mandantentrennung oder getrennten Review-Rollen.
-
-Die Ausgabe bietet einzelne HTML-Dateien oder ein ZIP pro Domäne mit
-`index.html`, stabil über Dokument-UUID benannten Seiten und einem
-`manifest.json` mit Revisionsnummern, Quellprüfsummen, Pipeline und
-Freigabezeitpunkt. Entwürfe ohne Freigabe sind ausgeschlossen; nach einer
-erneuten Bearbeitung wird weiterhin die zuvor freigegebene Revision exportiert.
-Es gibt noch keine Seitenhierarchie, Suchfunktion, automatische Bereitstellung
-oder Übernahme in die Markdown-Wissensdomäne. Exportierte EPUB-Kapitel brauchen
-für vollständige Navigation noch eine Linkumschreibung.
-
-Die Verarbeitung läuft synchron im HTTP-Request. Produktionsbetrieb benötigt
-zusätzlich isolierte Hintergrundverarbeitung, Wiederaufnahme unterbrochener
-Läufe und passende Nutzer-/Domänenrechte. Ein nach Prozessabbruch auf
-„Wird verarbeitet“ verbliebener Lauf wird noch nicht automatisch repariert.
-
-## Formatadapter [format-adapters]
-
-Der erste Umfang soll sich aus häufigen, konkreten Quellen ergeben. Zu
-prüfende Kandidaten sind:
-
-| Quellart | Beispiele für Verarbeitung | Besondere Prüfpunkte |
-|---|---|---|
-| Markdown und Text | Struktur und Metadaten übernehmen | Links, Überschriften, Kodierung und Herkunft |
-| PDF und Office-Dokumente | Text und Tabellen extrahieren; OCR bei Bedarf | Seiten-/Abschnittsbezug, Tabellenverlust, Scanqualität |
-| HTML und Webquellen | Lesbaren Inhalt und Metadaten erfassen | URL, Abrufzeit, Lizenz und entfernte Navigation |
-| EPUB und Bücher | Kapitelstruktur und Text übernehmen | Kapitel-/Positionsbezug und Umfang |
-| strukturierte Daten | CSV, JSON oder YAML abbilden | Schema, Datentypen und Feldzuordnung |
-| externe Systeme | später etwa Wissensbasen oder Ticketsysteme anbinden | Authentifizierung, Änderungsabgleich und Löschungen |
-
-Diese Liste bleibt das breitere Zielbild; den tatsächlich implementierten
-Teilumfang beschreibt der Import-Prototyp oben. Sie ist keine Zusage, alle Formate gleichzeitig
-zu unterstützen. Jeder Adapter muss unterstützte Varianten, Grenzen und
-Ergebnisqualität sichtbar machen.
-
 ## Pipeline-Lebenszyklus [pipeline-lifecycle]
 
-Eine Verarbeitung wird als nachvollziehbarer Lauf dargestellt:
+```yaml block-meta
+updated: "2026-11-11 17"
+status: active
+relations:
+- target: ../architecture/KNOWLEDGE-DOMAIN-AND-LIFECYCLE.md#lifecycle
+  type: depends-on
+  reason: Modellvertrag zum implementierten Ablauf
+```
+
+Vor dem Lauf steht die Bereitstellung einer Datei; sie ist noch kein
+Datenbankimport. Die Verarbeitung wird danach nachvollziehbar dargestellt:
 
 1. Quelle registrieren und Typ/Größe prüfen.
 2. Adapter und Pipeline-Version bestimmen.
 3. Extraktion und Normalisierung ausführen.
 4. Ergebnis mit Herkunft, Warnungen und Prüfvorschau speichern.
 5. Fehler oder unvollständige Ergebnisse zur Korrektur markieren.
-6. Nach menschlicher Prüfung daraus einen Entwurf oder Wissensinhalt erzeugen.
+6. Redaktionell in der Revisionslinie weiterarbeiten und nach Prüfung freigeben.
 
-Ein erneuter Lauf muss Ursprung und Laufversion nachvollziehbar halten und
-Duplikate vermeiden. Ob einzelne Schritte synchron ausgeführt oder über eine
-Jobqueue verteilt werden, ist noch offen; lang laufende oder parallelisierbare
-Schritte sollten später ohne Änderung des fachlichen Ablaufs ausgelagert
-werden können.
+Im implementierten Prototyp entstehen Extraktionssnapshot und Ausgangsentwurf
+gemeinsam bei erfolgreicher Zerlegung. Das ist keine menschliche Prüfung
+oder Freigabe; diese bleibt ausdrücklich separat.
+
+Direkte Zerlegung bereits registrierter Quellen bleibt synchron im HTTP-Request;
+Dateibestandsimporte laufen
+über den separaten [DB-Worker](IMPORT-UND-JOBS.md). Ein Lauf besitzt die
+Zustände bereit, wird verarbeitet, extrahiert oder fehlgeschlagen sowie
+Versuchszähler und Fehler-/Warnungsausgabe. Derselbe Quellstand, dasselbe
+Format und dieselbe Pipeline-Version verwenden den vorhandenen Lauf.
+Eine neue Version erzeugt einen eigenen Lauf, ohne alte Dokumente zu ändern.
+Batchauswahl, Queue und Worker sind implementiert. Unterbrochene
+Workerjobs werden mit ihren Versuchen zur Prüfung markiert und können
+ausdrücklich wiederholt werden; synchron gestartete Alt-Läufe werden dabei
+nicht automatisch übernommen. Erfolgreiche Direktzerlegungen erzeugen einen
+separaten Job zur Ablage des unveränderlichen Markdown-Ausgangsstands.
 
 ## Entwürfe und Review [drafts-and-review]
 
-Ein Entwurf ist eine bearbeitbare Revision und keine Kopie mit unklarem
-Ursprung. Mindestens erkennbar sein sollen:
+```yaml block-meta
+updated: "2026-11-11 05"
+status: active
+relations:
+- target: ../architecture/KNOWLEDGE-DOMAIN-AND-LIFECYCLE.md#collaboration
+  type: depends-on
+  reason: Modellvertrag zum implementierten Ablauf
+```
 
-- zugehörige Domäne und gegebenenfalls Zielposition in der Seitenhierarchie;
-- verwendete Quellen und konkrete Quellstellen, soweit verfügbar;
-- angewendete Verarbeitungsschritte und KI-Vorschläge;
-- Autor bzw. Bearbeiter, Erstellungszeit und Revisionsstand;
-- Review- und Veröffentlichungsstatus.
+Die Dokumentansicht zeigt Domäne, Quellstelle, Pipelinewarnungen, aktuelle
+Revision und bestehenden Freigabestand. Nutzer mit `content.publish_content`
+können die aktuelle Revision ausdrücklich freigeben; spätere Bearbeitung
+verändert diese Freigabe nicht.
 
-Menschen können Entwürfe bearbeiten und gemeinsam prüfen. KI-Ausgaben
-erscheinen als Vorschläge mit Bezug auf Ausgangstext und Quellen. Annahme,
-Ablehnung und Veröffentlichung sind ausdrücklich bestätigte Aktionen.
-Gleichzeitige Änderungen müssen entweder zusammengeführt oder als Konflikt
-angezeigt werden; ein stilles Überschreiben ist nicht akzeptabel.
+Editor, Historie und Konfliktverhalten sind in
+[Quellen und Textwerkstatt](QUELLEN-UND-TEXTWERKSTATT.md) beschrieben.
+Alle angemeldeten Nutzer teilen denselben Bestand. Getrennte Review-Rollen,
+Domänen-ACLs, Mandantentrennung und KI-Vorschläge sind noch nicht verfügbar.
 
 ## Fehler und Wiederaufnahme [failure-handling]
 
-Fehler sind pro Quelle und Verarbeitungsschritt sichtbar. Ein fehlgeschlagener
-Lauf darf keine erfolgreiche Endfassung vortäuschen. Nutzer sollen erkennen,
-ob das Problem in der Datei, im Adapter, in einer optionalen OCR-/KI-Stufe
-oder in der Ausgabe liegt und welche Schritte wiederholt werden können.
+```yaml block-meta
+updated: "2026-11-11 05"
+status: active
+relations: []
+```
 
-Wiederholungen sollen idempotent sein: Bereits gespeicherte Ergebnisse werden
-nicht unbemerkt dupliziert oder freigegebene Inhalte überschrieben. Vor einer
-erneuten Verarbeitung geänderter Quellen muss erkennbar sein, ob ein neuer
-Entwurf, ein Vergleich oder eine ausdrückliche Aktualisierung erwartet wird.
+Die Laufansicht zeigt konkrete Importfehler und Adapterwarnungen.
+Ungültige Extraktion erzeugt keine teilweise gespeicherte Dokumentserie.
+Die registrierte Quelle bleibt bei einem Extraktionsfehler bestehen.
+
+„Verarbeitung erneut versuchen“ ist nur bei fehlgeschlagenen Läufen der
+aktuellen Pipeline möglich. Ein laufender oder abgeschlossener Lauf wird
+nicht erneut beansprucht. Eine abgelöste Pipeline lässt sich nicht mit neuem
+Code unter altem Versionsnamen wiederholen; die Quelle wird stattdessen mit
+der aktuellen Version zerlegt.
+Es gibt noch keine automatische Retryplanung oder Abbruch-/Pausefunktion.
 
 ## Statische Ausgabe [static-output]
 
-Aus freigegebenen Revisionen soll eine hierarchische HTML-Site erzeugt werden
-können. Das Ergebnis enthält Navigation, stabile URLs, interne Verknüpfungen
-und wahlweise sichtbare Quellenangaben. Ein Build referenziert die
-eingeschlossenen Revisionen und kann getrennt von der CMS-Anwendung
-bereitgestellt werden.
+```yaml block-meta
+updated: "2026-11-11 17"
+status: active
+relations:
+- target: ../architecture/AUSGABE-UND-PUBLIKATION.md#publikationskomposition
+  type: depends-on
+  reason: Modellvertrag zum implementierten Ablauf
+- target: ../architecture/CMS-AND-PUBLISHING.md#publishing-model
+  type: depends-on
+  reason: Modellvertrag zum implementierten Ablauf
+```
 
-Nur freigegebener Inhalt gehört in die öffentliche Ausgabe; Vorschauen dürfen
-Entwürfe anzeigen, aber müssen deutlich als nicht veröffentlicht markiert
-sein. Welche Build-Werkzeuge, Themes, Suchfunktionen und Hostingziele wir
-verwenden, entscheiden wir nach einem ersten Beispielinhalt. Die
-[CMS-Einordnung](../architecture/CMS-AND-PUBLISHING.md) hält fest, warum ein
-statischer Export nicht selbst die Redaktionsoberfläche ersetzt.
+Die Dokumentansicht bietet die freigegebene Revision als einzelne HTML-Datei
+an. Die eigene OUTPUT-Seite unter `/content/output/` bietet für Domänen mit
+freigegebenen Dokumenten einen Site-ZIP-Download und berücksichtigt die
+persönliche Domänenwahl. Ohne Freigaben zeigt sie einen ausdrücklichen Leerstand.
+
+Das ZIP enthält `index.html`, flach angeordnete Seiten mit stabilen
+Dokument-UUID-Dateinamen und `manifest.json`. Das Manifest benennt
+Revisions-IDs/-nummern, Revisions-/Extraktions-/Quellprüfsummen, Pipeline
+und Freigabezeitpunkt. Ohne Freigabe erscheint ein Dokument nicht im Export;
+bei neueren Entwürfen wird weiterhin die ältere freigegebene Fassung verwendet.
+
+HTML wird vor Anzeige von unerlaubten Tags, Attributen und URL-Protokollen
+bereinigt. Statische Ausgaben enthalten weder Editor noch internes App-Menü.
+Die Dateien lassen sich unabhängig von Django ausliefern; der Download
+überträgt sie nicht automatisch auf einen Webserver.
+
+Seitenhierarchie, Suche, Assetübernahme, Baum-/PDF-Export und automatisierte
+Publikation fehlen noch. EPUB-Kapitellinks sind noch nicht für vollständige
+Site-Navigation umgeschrieben. Das spätere Zielbild steht in
+[Ausgabe und Publikation](../architecture/AUSGABE-UND-PUBLIKATION.md);
+die [CMS-Einordnung](../architecture/CMS-AND-PUBLISHING.md) bleibt davon getrennt.

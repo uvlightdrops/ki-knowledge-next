@@ -1,0 +1,12 @@
+{% extends "content/base.html" %}{% block title %}Zusammenstellungen{% endblock %}{% block content %}
+<h1>Zusammenstellungen</h1>
+<p><a href="{% url 'content:collection-create' %}">Zusammenstellung anlegen</a> ·
+<a href="{% url 'content:resources' %}">Ressourcenkatalog</a> · <a href="{% url 'content:relation-types' %}">Relationstypen</a></p>
+<form method="get"><label>Titel <input name="q" value="{{ request.GET.q }}"></label>
+<label><input type="checkbox" name="origin" value="custom"{% if request.GET.origin == "custom" %} checked{% endif %}> Nur eigene Zusammenstellungen</label>
+{% if request.GET.domain %}<input type="hidden" name="domain" value="{{ request.GET.domain }}">{% endif %}<button>Filtern</button></form>
+<table><thead><tr><th>Titel</th><th>Domäne</th><th>Form</th><th>Herkunft</th></tr></thead><tbody>
+{% for item in collections %}<tr><td><a href="{% url 'content:collection' item.pk %}">{{ item.resource.title }}</a></td><td>{{ item.resource.domain }}</td>
+<td>{{ item.get_kind_display }}</td><td>{% if item.source_revision_id %}Quellgliederung · schreibgeschützt{% else %}Redaktionell · Version {{ item.version }}{% endif %}</td></tr>
+{% empty %}<tr><td colspan="4">Keine Zusammenstellungen. Vorhandene Revisionen mit <code>python manage.py index_content</code> indexieren.</td></tr>{% endfor %}
+</tbody></table>{% include "content/pagination.html" %}{% endblock %}
