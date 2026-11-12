@@ -5,8 +5,8 @@ agent_project: ki-knowledge-next
 scope: deployment
 purpose: "Trennt den vorhandenen Betriebsanschluss von offenen Produktions-, Automatisierungs- und Abnahmeentscheidungen."
 created: "2026-11-10T20:55:00+01:00"
-updated: "2026-11-11 21"
-update_reason: "Lokalen Web-/Workerstart und vorhandenen Stopvertrag eingeordnet"
+updated: "2026-11-11 23"
+update_reason: "Eigenständige lokale Web- und Worker-Dienste im Stackvertrag eingeordnet"
 status: draft
 relations:
   - target: README.md
@@ -25,7 +25,7 @@ relations:
 ## Stand heute und Betriebsentscheidung [betriebsentscheidung]
 
 ```yaml block-meta
-updated: "2026-11-11 21"
+updated: "2026-11-11 23"
 status: active
 relations:
   - target: README.md#deployment-index
@@ -37,8 +37,9 @@ relations:
 ```
 
 Next verwendet den gemeinsamen `stackctl`-Einstieg mit eigener
-YAML-Konfiguration. Der lokale Starter beaufsichtigt Django und den
-separaten Importworker gemeinsam. Der aktuelle Speicher
+YAML-Konfiguration. Der lokale Stack enthält `django` und `import-worker`
+als getrennt steuerbare Dienste. Alternativ beaufsichtigt `./start` beide
+Prozesse gemeinsam im Vordergrund. Der aktuelle Speicher
 ist SQLite mit privaten Datei- und Beziehungswurzeln.
 
 [Betriebsgrundlagen](BETRIEB.md) beschreiben Installation, Sicherung,

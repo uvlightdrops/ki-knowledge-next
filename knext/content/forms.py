@@ -5,6 +5,17 @@ from .importers.base import ImportFailure, MAX_TEXT_CHARS
 from .markdown_document import split_markdown
 
 
+class DocumentListFilterForm(forms.Form):
+    q = forms.CharField(label="Dokument", required=False, max_length=255)
+    domain_q = forms.CharField(label="Domäne", required=False, max_length=150)
+    folder = forms.CharField(label="Ordner", required=False, max_length=1000)
+    filename = forms.CharField(label="Dateiname", required=False, max_length=255)
+    revision = forms.IntegerField(label="Arbeitsstand", required=False, min_value=1)
+    approved = forms.ChoiceField(label="Freigabe", required=False, choices=[
+        ("", "Alle"), ("yes", "Freigegeben"), ("no", "Nicht freigegeben"),
+    ])
+
+
 class RevisionForm(forms.Form):
     expected = forms.IntegerField(min_value=1, widget=forms.HiddenInput)
     title = forms.CharField(label="Titel", max_length=255)

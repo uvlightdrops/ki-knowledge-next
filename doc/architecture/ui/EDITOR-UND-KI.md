@@ -5,8 +5,8 @@ agent_project: ki-knowledge-next
 scope: architecture
 purpose: "Beschreibt den editorzentrierten Arbeitsraum, einfache Sicherungsstände und kontextbezogene KI-Vorschläge als noch auszugestaltenden UI-Entwurf."
 created: "2026-11-11 20"
-updated: "2026-11-11 21"
-update_reason: "Implementierten Editoreinstieg verlinkt und offene Sicherungsfragen eingegrenzt"
+updated: "2026-11-12 00"
+update_reason: "Implementierten KI-Textworkflow und seine offenen strukturierten Erweiterungen eingeordnet"
 status: draft
 relations:
   - target: ../../features/QUELLEN-UND-TEXTWERKSTATT.md#text-bearbeiten
@@ -84,9 +84,12 @@ sind noch festzulegen.
 ## Kontext und Vorschlagsarbeit [ki-vorschlaege]
 
 ```yaml block-meta
-updated: "2026-11-11 20"
+updated: "2026-11-12 00"
 status: active
 relations:
+  - target: ../../features/QUELLEN-UND-TEXTWERKSTATT.md#ki-textvorschlaege
+    type: reference
+    reason: Implementierter Textworkflow mit expliziter Annahme
   - target: ../KONFIGURATION-UND-KI.md#ki-funktionskarte
     type: reference
     reason: Gemeinsame Provideranbindung und spätere KI-Fähigkeiten
@@ -105,12 +108,19 @@ sichtbar ausgewählt, nicht automatisch als vollständiger Domänenchat
 Die Anbindung verwendet `ki-core` und die bestehende YAML-Auflösung;
 erster Anschluss ist der bewährte OpenAI-Weg.
 
+Der [erste Textworkflow](../../features/QUELLEN-UND-TEXTWERKSTATT.md#ki-textvorschlaege)
+ist angeschlossen: freie Auswahl oder ganzer Body, Auftrag mit Vorlagen,
+ausdrücklicher Zusatztext und ein bearbeitbarer Ersatzvorschlag. Die
+Übernahme speichert nach Ausgangsprüfung und bewahrt auch einen bisher
+ungespeicherten Ausgangspuffer. Die konkrete Bedienung und Grenzen stehen
+in der Featurebeschreibung.
+
 Ein Vorschlag steht neben dem Original und kann geändert, ganz oder
 teilweise übernommen, verworfen oder mit einer weiteren Vorgabe bearbeitet
 werden. Ein persistenter allgemeiner Chat ist keine Voraussetzung.
 Providerfehler und ungültige Ergebnisse bleiben sichtbar.
 
-Texterstellung und Korrektur liefern Textvorschläge. Schlagworte liefern
+Texterstellung und Korrektur liefern Textvorschläge. Als nächste Erweiterung liefern Schlagworte
 Attributvorschläge; semantische Aufteilung liefert prüfbare Blockgrenzen
 und Inhalte. Neue Blöcke entstehen erst nach ausdrücklicher Bestätigung.
 Annahme prüft den Ausgangsstand und verändert keine veröffentlichte Fassung.

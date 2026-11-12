@@ -5,8 +5,8 @@ agent_project: ki-knowledge-next
 scope: architecture
 purpose: "Bewertet den Konfigurationsstack und das übernehmbare Schema sowie den vollständigen KI-Funktionsumfang des Altprojekts."
 created: "2026-11-10T20:55:00+01:00"
-updated: "2026-11-11 20"
-update_reason: "Begrenzte Editoraufträge als ersten KI-Anschluss von späterem Chat und Retrieval getrennt"
+updated: "2026-11-12 00"
+update_reason: "Umgesetzte Provider-/Schemaanbindung durch Featureverweise ersetzt und offenen Ausbau eingegrenzt"
 status: draft
 relations:
   - target: "../features/KONFIGURATION-UND-START.md"
@@ -25,9 +25,12 @@ relations:
 ## Konfigurationsentscheidung [konfigurationsentscheidung]
 
 ```yaml block-meta
-updated: "2026-11-11 20"
+updated: "2026-11-12 00"
 status: active
 relations:
+- target: ../features/KONFIGURATION-UND-START.md#ki-konfiguration
+  type: reference
+  reason: Implementierter ki-core-Anschluss mit Betreiberaktivierung und neutralem Test
 - target: ../features/KONFIGURATION-UND-START.md#konfiguration
   type: reference
   reason: Implementierter Ablauf zu diesem Konzept
@@ -39,29 +42,28 @@ Credentials und Startwege stehen in
 [Konfiguration und lokaler Start](../features/KONFIGURATION-UND-START.md).
 Diese Basis ist implementiert.
 
-Offen ist der Anschluss von `ki-core` für KI-Provider und das gemeinsame
-LLM-/HTTP-Schema sowie ein berechtigter Runtime-Webeditor.
-Die projektlokale Auflösung bleibt führend; die automatische
-Schema-/Home-Suche des Altprojekts darf ihre Zuständigkeit nicht erweitern.
-`ki-core` ist noch keine deklarierte Next-Abhängigkeit.
+`ki-core` ist eine deklarierte Next-Abhängigkeit und stellt Providerclients
+sowie die gemeinsam konsumierten `llm`-/`http`-Schemaabschnitte.
+Die [KI-Konfiguration](../features/KONFIGURATION-UND-START.md#ki-konfiguration)
+bleibt in der projektlokalen Auflösung; die automatische Schema-/Home-Suche
+des Altprojekts erweitert ihre Zuständigkeit nicht.
 
 App-spezifische Felder gehören in das Next-Schema; gemeinsame
 KI-Felder werden aus dem gemeinsamen Paket konsumiert.
-Der Runtime-Editor soll den vorhandenen generischen Dienst verwenden.
+Offen bleibt ein berechtigter Runtime-Editor über den generischen Dienst.
 Ein gespeicherter Runtime-Wert kann durch höhere Konfigurationslayer
 übersteuert bleiben und muss entsprechend angezeigt werden.
 
 Das gemeinsame Schema kennt auch `llm.provider: auto`. Der Chatvertrag
 unterscheidet bewusst zwischen Anzeigen ohne Netzwerkprobe und tatsächlicher
-Providerauflösung beim Aufruf. **Empfehlung für Next:** Produktionsprofile
-wählen einen konkreten Provider; Autoerkennung darf keinen unerwarteten
-Testbetrieb erzeugen. Das ist eine zu prüfende Next-Regel, keine bereits
-im Basisschema erzwungene Eigenschaft.
+Providerauflösung beim Aufruf. Die Next-Textwerkstatt verlangt bereits
+einen konkreten Provider und lehnt Auto-/Mockbetrieb für echte
+Editoraufträge ab; das gemeinsame Basisschema bleibt allgemeiner.
 
 ## Schemaauswahl [schemaauswahl]
 
 ```yaml block-meta
-updated: "2026-11-11 05"
+updated: "2026-11-12 00"
 status: draft
 relations: []
 ```
@@ -73,8 +75,8 @@ Schemaabschnitte bleiben Übernahmevorschläge.
 
 | Vorhandener Schemapfad | Entscheidung | Anpassung für Next |
 |---|---|---|
-| `version`, `system`, `logging`, `http` | Gemeinsame Basis übernehmen | Defaults und Validierung aus `ki-core`; kein zusätzlicher Satz im Appcode |
-| `llm.provider`, `llm.providers.{ki,openai,ollama}` | Vollständig übernehmen | Chatprovider und Modelle explizit auswählbar; `mock` nur als klar gekennzeichneter Testmodus |
+| `version`, `system`, `logging` | Gemeinsame Basis prüfen | Nur benötigte Abschnitte konsumieren |
+| `llm.provider`, `llm.providers.{ki,openai,ollama}`, `http` | In Next konsumiert | Konkreter Provider und Modell in Betreiberkonfiguration; Textwerkstatt ohne Auto-/Mock-Fallback |
 | `profiles`, `stages` | Übernehmen | Aktivierung und Layer-Herkunft anzeigen; ausgewählte Layer, nicht alle Hosts zusammen laden |
 | `stack` aus `config/defaults/stack.yaml` | Betriebsvertrag übernehmen | Eigene Dienste, Pfade, Ports und Startmodule; nicht den alten Vier-Dienste-Stack voraussetzen |
 | `knowledge.default_domain`, `knowledge.embed_model` | Fachlich weiterführen | Zuständigkeit für aktive Domäne und Embedding-Profil festlegen |
@@ -89,7 +91,9 @@ Schemaabschnitte bleiben Übernahmevorschläge.
 
 **Neue, noch zu spezifizierende Felder:** Importlimits, Adapteraktivierung,
 Joblaufzeiten, Ausgabeformate/Themes, Ressourcenlimits für PDF, Embedding-
-Versionsvertrag und KI-Kontextlimits. Diese Werte brauchen Schemafelder
+Versionsvertrag. KI-Eingabegrenzen stehen bereits in der
+[KI-Konfiguration](../features/KONFIGURATION-UND-START.md#ki-konfiguration).
+Weitere Werte brauchen Schemafelder
 mit Bounds und Zuständigkeit, nicht versteckte Konstanten in Views.
 
 Das alte App-Schema erlaubt in vielen Abschnitten `additionalProperties: true`;
@@ -138,25 +142,30 @@ Ein Embedding-Modellwechsel braucht zusätzlich einen Index-Neuaufbau;
 ## KI-Funktionskarte [ki-funktionskarte]
 
 ```yaml block-meta
-updated: "2026-11-11 20"
+updated: "2026-11-12 00"
 status: draft
 relations:
+  - target: ../features/QUELLEN-UND-TEXTWERKSTATT.md#ki-textvorschlaege
+    type: reference
+    reason: Implementierter erster Textworkflow mit gesicherter Annahme
   - target: ui/EDITOR-UND-KI.md#ki-vorschlaege
     type: reference
     reason: Vereinbarter erster Anschluss mit ausgewähltem Text und Attributen
 ```
 
 Der erste Anschluss verwendet `ki-core` und OpenAI für begrenzte
-Editoraufträge. Kontextwahl und Vorschlagsbedienung stehen im
+Editoraufträge und ist als
+[KI-Textworkflow](../features/QUELLEN-UND-TEXTWERKSTATT.md#ki-textvorschlaege)
+implementiert. Kontextwahl und Vorschlagsbedienung stehen im
 [UI-Entwurf](ui/EDITOR-UND-KI.md#ki-vorschlaege). Die weiteren Fähigkeiten
 bleiben Ausbauoptionen; ihr Umfang bestimmt nicht den ersten Arbeitsweg.
 
 | Fähigkeit | Übernehmbarer Bestand | Anschluss und Aufwand |
 |---|---|---|
-| Provider und Modellauswahl | `llm_provider.py`, `ki_core.chat`, `ollama_models.py` | Schlanker Next-Adapter; `ki`, OpenAI-kompatibel, Ollama und Testprovider, gemeinsamer Sync-/Streaming-Vertrag mit Async-Wrappern |
+| Provider und Modellauswahl | `ki_core.chat` | Erster Next-Anschluss implementiert; Konfiguration und Grenzen in der Featurebeschreibung |
 | Allgemeiner Domänenchat | `django_site/chat_service.py`, `views_chat.py` | Späterer Ausbau; Speicherung und Kontextauswahl separat festlegen |
-| Auswahlbezogene Aufträge | `workbench_service.py:547–758` | Ausgangstext, Auswahl und ausdrücklicher Zusatzkontext; vollständiges Konversationsmodell nicht erforderlich |
-| KI-Änderungsvorschläge | `workbench_proposals.py` | Generieren getrennt von Annehmen; strukturiertes Ergebnis, Ausgangsrevision, Modell, Promptversion und Annahmerevision behalten |
+| Auswahlbezogene Aufträge | Next-Textworkflow | Textauswahl/Body und ausdrücklicher Zusatztext implementiert; Ressourcenpicker und Attributkontext bleiben offen |
+| KI-Änderungsvorschläge | Next-Textworkflow | Textvorschläge mit Ausgangspuffer, Modell, Promptversion und Annahmerevision implementiert; strukturierte Attribute/Blockgrenzen bleiben offen |
 | Promptbibliothek und Batch | `prompt_library.py` | Vorlagen und Backlog erhalten; Dateischreiben, Batchstatus und Konflikte an gemeinsamen Lauf-/Revisionsvertrag anpassen |
 | Embeddings | `integrations/embeddings.py`, `block_embedder.py`, `block_embeddings.py` | Batchverarbeitung, Präfixe und veraltete Blöcke erhalten; Textbegrenzung und Modellidentität explizit versionieren |
 | Semantische Suche | `django_site/block_search.py`, `KnowledgeStore.similar_blocks` | Retrieval aus erlaubten Quellen und gewähltem Revisionsstand; SQLite/pgvector nicht ungeprüft austauschen |
@@ -172,31 +181,21 @@ Kontext- und Indexverträge, wenn sie angeschlossen werden.
 ## KI-Bereinigung [ki-bereinigung]
 
 ```yaml block-meta
-updated: "2026-11-11 05"
+updated: "2026-11-12 00"
 status: draft
-relations: []
+relations:
+  - target: ../features/QUELLEN-UND-TEXTWERKSTATT.md#ki-textvorschlaege
+    type: reference
+    reason: Bereits umgesetzter Vorschlags- und Sicherungsvertrag als Grundlage des weiteren Anschlusses
 ```
 
-Die jüngere Workbench ist die bessere fachliche Vorlage: Vorschläge verändern
-den Entwurf nicht beim Generieren, prüfen Ausgangsrevision und Textanker,
-validieren strukturierte Antworten und speichern Kontext, Provider und Modell.
-Next hat bereits eigene Inhaltsrevisionen. Diese sollten erweitert oder
-adaptiert werden, statt parallel sämtliche Workbench-Dokumentmodelle
-unverändert anzulegen.
+Der weitere Anschluss baut auf dem
+[implementierten Textworkflow](../features/QUELLEN-UND-TEXTWERKSTATT.md#ki-textvorschlaege)
+und den Next-Inhaltsrevisionen auf. Strukturierte Attribute und neue
+Blockgrenzen benötigen zusätzlich fachliche Ergebnisvalidierung.
 
-Das ältere InfoSite-Refinement schreibt dagegen direkt auf ausgewählte
-Dateien und nutzt bei leerem KI-Ergebnis den Originalinhalt weiter.
-Diese Erfolgs-/Fehlersemantik und der freie Dateipfadvertrag passen nicht
-zum neuen Revisions- und Freigabemodell. Die Features bleiben, der
-Schreibweg wird ersetzt.
+Für den weiteren Ausbau bleiben folgende Paket- und Datenverträge wichtig:
 
-Weitere konkrete Anpassungen:
-
-- `AppConfig` im Altprojekt enthält Schema-Defaults erneut im Pythoncode,
-  einen `sys.path`-Import-Fallback und umfassende Caching-Logik.
-  Gemeinsamen Resolver behalten, dünnen Next-Zugriff bauen.
-- `llm_provider.py` baut aus abgeflachten Appfeldern erneut eine Config;
-  unnötige Hin-und-zurück-Abbildung vermeiden.
 - Der alte Config-Editor greift auch auf private `ki-core`-Hilfen zu.
   Gemeinsame öffentliche Verträge verwenden oder dort ergänzen, statt
   diese Paketkopplung in Next zu vervielfachen.
@@ -209,9 +208,8 @@ Weitere konkrete Anpassungen:
 - Rechte und Freigabestand vor Auswahl des Retrievalkontexts prüfen.
   Quellenangaben müssen die verwendete Revision belegen, nicht nur den
   inzwischen veränderten Dateipfad.
-- Providerfehler, leere Antworten, ungültiges JSON und fehlende Indizes
-  sichtbar melden; keine KI-Antwort still durch eine andere Betriebsart ersetzen.
-- Generierung und Export bleiben getrennt: KI-Erfolg erteilt keine Freigabe.
+- Strukturierte Antworten und fehlende Indizes brauchen nachvollziehbare
+  Fehlerzustände zusätzlich zur bestehenden Behandlung von Text-/Providerfehlern.
 
 ## Abnahme und Quellen [abnahme-und-quellen]
 

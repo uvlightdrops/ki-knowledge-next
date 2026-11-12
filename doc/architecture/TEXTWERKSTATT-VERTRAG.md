@@ -5,8 +5,8 @@ agent_project: ki-knowledge-next
 scope: architecture
 purpose: "Bündelt die verbleibenden technischen Anschlussfragen des einfachen Editors und seiner KI-Vorschläge an Next."
 created: "2026-11-11 05"
-updated: "2026-11-11 21"
-update_reason: "Implementierten Editor- und Wiederherstellungsanschluss aus offenen Vertragsfragen herausgenommen"
+updated: "2026-11-12 00"
+update_reason: "KI-Textannahme als umgesetzt eingeordnet und verbleibende strukturierte Anschlüsse abgegrenzt"
 status: draft
 relations:
   - target: README.md
@@ -54,7 +54,7 @@ ihre editierbaren Inhalte und Metadaten benötigen explizite Zuständigkeiten.
 ## Sicherungsanschluss und Konflikte [revisionen-yaml-konflikte]
 
 ```yaml block-meta
-updated: "2026-11-11 21"
+updated: "2026-11-12 00"
 status: draft
 relations:
   - target: ui/EDITOR-UND-KI.md#sicherungsstaende
@@ -64,8 +64,9 @@ relations:
 
 Der [Editoranschluss](../features/QUELLEN-UND-TEXTWERKSTATT.md#text-bearbeiten)
 verwendet die vorhandenen Speicher- und Wiederherstellungsdienste mit
-Konfliktschutz. Offen bleiben automatische Sicherungszeitpunkte für
-ungespeicherte Puffer und der spätere KI-Annahmevertrag.
+Konfliktschutz. KI-Textannahmen bewahren einen noch ungespeicherten
+Ausgangspuffer als eigenen Stand vor dem Ersatz. Offen bleiben automatische
+Sicherungszeitpunkte außerhalb ausdrücklicher Speicheraktionen.
 
 Der Editor bearbeitet den headerfreien Markdown-Body. Textänderungen
 vererben vorhandene Metadaten; Attributänderungen sind eigene Aktionen.
@@ -74,9 +75,12 @@ Freigaben bleiben an konkrete gespeicherte Fassungen gebunden.
 ## Auswahl und KI-Annahme [markierungen-und-ki]
 
 ```yaml block-meta
-updated: "2026-11-11 20"
+updated: "2026-11-12 00"
 status: draft
 relations:
+  - target: ../features/QUELLEN-UND-TEXTWERKSTATT.md#ki-textvorschlaege
+    type: reference
+    reason: Implementierte genaue Textauswahl und transaktionale Vorschlagsannahme
   - target: ui/EDITOR-UND-KI.md#ki-vorschlaege
     type: reference
     reason: Begrenzter Kontext und geprüfte Vorschläge statt vollständigem Chatmodell
@@ -87,22 +91,26 @@ Textstellen. Unicode-Codepoints und JavaScript-UTF-16-Indizes sind dabei
 ausdrücklich zu unterscheiden. Dauerhafte Annotationen sind ein eigener
 späterer Ausbau, keine Voraussetzung des einfachen Editors.
 
-Offen sind Ergebnisformate für Text, Attribute und Blockaufteilung,
-teilweise Annahme, Kontextlimits und die Lebensdauer der Aufträge.
-Provider, Modell und Ausgangsstand müssen nachvollziehbar bleiben.
-Doppelte Annahme oder Wiederholung darf nicht unbemerkt zusätzliche
-Schreibvorgänge oder kostenpflichtige Anfragen erzeugen.
+Für Textvorschläge sind Codepoint-Anker, exakter Ausgangspuffer, Titel und
+DB-Ausgangsstand festgehalten. Annahme und gegebenenfalls Puffersicherung
+geschehen transaktional über die vorhandenen Revisionsdienste; eine zweite
+Annahme wird abgelehnt. Provider, Modell, Promptversion und Auftrag bleiben
+am Vorschlag nachvollziehbar. Generierungen haben ein Eingabelimit,
+Zeitlimit und eine Begrenzung pro Nutzer.
+
+Offen sind strukturierte Ergebnisse für Attribute und Blockaufteilung,
+feingranulare Teilannahme und Aufbewahrungsgrenzen für Aufträge.
 
 ## Anschluss und Abnahme [anschluss-und-abnahme]
 
 ```yaml block-meta
-updated: "2026-11-11 21"
+updated: "2026-11-12 00"
 status: draft
 relations: []
 ```
 
-Der erste Editoranschluss ist vorhanden. Attribute und KI-Vorschläge folgen
-auf demselben Ressourcen- und Speichervertrag. Weitere Seitenvarianten
+Der Editor und KI-Textvorschläge verwenden denselben Ressourcen- und
+Speichervertrag. Strukturierte Attribute folgen separat. Weitere Seitenvarianten
 werden über die Navigation erprobt.
 
 Zu prüfen sind Konflikte ohne Pufferverlust, Wiederherstellung, unveränderte

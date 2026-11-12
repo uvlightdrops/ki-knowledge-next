@@ -14,6 +14,13 @@ button:hover,.button:hover{background:#356859}.muted,small{color:#b4c6bf}.messag
 .warning{border-color:#e4b85c}.error,.errorlist{border-color:#f38c80;color:#ffbdb2}
 table{width:100%;max-width:100%;overflow-x:auto;display:block;border-collapse:collapse;text-align:left}th,td{padding:.7rem;border-bottom:1px solid #415651;vertical-align:top}
 .compact-table th,.compact-table td{padding:.35rem .5rem}.compact-table button{padding:.2rem .5rem;font-size:.85rem}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.document-table{display:table;min-width:800px;table-layout:fixed}
+.document-filters{overflow-x:auto}
+.table-filters input,.table-filters select{width:100%;min-width:0;padding:.3rem}
+.table-actions{display:flex;align-items:center;gap:1rem;margin-top:.7rem}
+.document-table td,.relation-types-table td{overflow-wrap:anywhere}
+.relation-types-table{display:table;line-height:1.35}
 pre,code{overflow-wrap:anywhere;white-space:pre-wrap}pre{padding:.8rem;background:#141d21;overflow:auto}
 .prose{overflow-wrap:anywhere}.prose table{font-size:.9rem}dt{font-weight:700}dd{margin:0 0 .6rem}
 @media(max-width:950px){.columns{grid-template-columns:1fr}main{padding:1rem}header{padding:1rem}table{font-size:.9rem}}

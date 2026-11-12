@@ -1,10 +1,13 @@
 from django.urls import path
 
-from . import editor_views, graph_views, job_views, revision_views, source_views, views
+from . import ai_views, editor_views, graph_views, job_views, revision_views, source_views, views
 
 app_name = "content"
 
 urlpatterns = [
+    path("editor/<uuid:pk>/ai/", ai_views.propose, name="ai-propose"),
+    path("editor/ai/<uuid:pk>/accept/", ai_views.accept_proposal, name="ai-accept"),
+    path("editor/ai/<uuid:pk>/discard/", ai_views.discard_proposal, name="ai-discard"),
     path("editor/", editor_views.EditorListView.as_view(), name="editor-index"),
     path("editor/preview/", editor_views.preview, name="editor-preview"),
     path("editor/<uuid:pk>/", editor_views.editor, name="editor"),

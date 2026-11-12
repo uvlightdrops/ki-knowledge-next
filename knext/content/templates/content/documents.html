@@ -4,19 +4,5 @@
 <p>Dokumente direkt öffnen, Entwürfe bearbeiten und ihre Revisionshistorie ansehen.</p>
 <p><a href="{% url 'content:collections' %}">Zusammenstellungen und Quellgliederungen</a> ·
 <a href="{% url 'content:resources' %}">Ressourcen und Relationen</a></p>
-<form method="get" class="panel"><label>Titel suchen <input name="q" value="{{ request.GET.q }}"></label>
-<label>Freigabe <select name="approved"><option value="">Alle</option><option value="yes"{% if request.GET.approved == "yes" %} selected{% endif %}>Freigegeben</option><option value="no"{% if request.GET.approved == "no" %} selected{% endif %}>Nicht freigegeben</option></select></label>
-{% if request.GET.domain %}<input type="hidden" name="domain" value="{{ request.GET.domain }}">{% endif %}<button>Filtern</button></form>
-<section class="panel">
-<table><thead><tr><th>Dokument</th><th>Domäne / Quelle</th><th>Arbeitsstand</th><th>Freigabe</th></tr></thead><tbody>
-{% for document in documents %}
-<tr><td><a href="{% url 'content:document' document.pk %}">{{ document.title }}</a>
- · <a href="{% url 'content:editor' document.pk %}">Editor</a></td>
-<td>{{ document.run.source.domain }} · <a href="{% url 'content:source' document.run.source_id %}">{{ document.run.source.filename }}</a></td>
-<td><a href="{% url 'content:revision' document.pk document.revision_number %}">Revision {{ document.revision_number }}</a></td>
-<td>{% if document.approved_revision %}Revision {{ document.approved_revision.number }}{% else %}Noch nicht freigegeben{% endif %}</td></tr>
-{% empty %}<tr><td colspan="4">Noch keine Dokumente. Zunächst eine Quelle registrieren und zerlegen oder eine Datei importieren.</td></tr>{% endfor %}
-</tbody></table>
-{% include "content/pagination.html" %}
-</section>
+{% include "content/document_table.html" %}
 {% endblock %}

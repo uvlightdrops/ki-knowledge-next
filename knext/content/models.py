@@ -242,6 +242,7 @@ class ContentRevision(ImmutableModel):
 
 
 # Django discovers these models through this app's models module.
+from .ai_models import TextProposal  # noqa: E402,F401
 from .graph_models import (  # noqa: E402,F401
     BlockSnapshot, CollectionEntry, CollectionLink, ContentCollection, ContentResource,
     RelationType, ResourceRelation,

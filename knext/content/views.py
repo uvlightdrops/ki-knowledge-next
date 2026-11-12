@@ -3,15 +3,17 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import F, OuterRef, Subquery, Value
+from django.db.models.functions import Coalesce, Greatest, Length, Lower, StrIndex, Substr
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 from django.views.generic import DetailView, ListView, TemplateView
 from knext.domains import domain_aliases
 
-from .forms import ApprovalForm, RevisionForm
+from .forms import ApprovalForm, DocumentListFilterForm, RevisionForm
 from .importers.base import ImportFailure
-from .models import ContentDocument, ImportRun
+from .models import ContentDocument, ImportRun, SourceRegistration
 from .rendering import build_site, render_output, render_revision
 from .services import RevisionConflict, approve, process_run, revise
 
@@ -57,23 +59,76 @@ class DocumentListView(LoginRequiredMixin, ListView):
     template_name = "content/documents.html"
     context_object_name = "documents"
     paginate_by = 30
+    columns = (
+        ("q", "title", "Titel"),
+        ("domain_q", "run__source__domain", "Domäne"),
+        ("folder", "source_folder", "Ordner"),
+        ("filename", "run__source__filename", "Dateiname"),
+        ("revision", "revision_number", "Arbeitsstand"),
+        ("approved", "approved_revision__number", "Freigabe"),
+    )
 
     def get_queryset(self):
+        registrations = SourceRegistration.objects.filter(
+            source_id=OuterRef("run__source_id"),
+        ).order_by("-registered_at", "-pk")
         documents = ContentDocument.objects.select_related(
             "run__source", "approved_revision",
-        ).defer("run__source__data").order_by("-created_at", "id")
+        ).defer("run__source__data").annotate(
+            registered_path=Coalesce(Subquery(registrations.values("relative_path")[:1]), Value("")),
+        ).annotate(
+            source_folder=Substr(
+                "registered_path", StrIndex("registered_path", Value("/")) + 1,
+                # Registration paths are DOMAIN/FOLDER/FILENAME; omit domain and basename.
+                Greatest(Length("registered_path") - StrIndex("registered_path", Value("/"))
+                         - Length("run__source__filename") - 1, Value(0)),
+            ),
+        )
         if self.request.active_domain:
             documents = documents.filter(run__source__domain__in=domain_aliases(self.request.active_domain))
-        if self.request.GET.get("q"):
-            documents = documents.filter(title__icontains=self.request.GET["q"])
-        if self.request.GET.get("approved") in {"yes", "no"}:
-            documents = documents.filter(approved_revision__isnull=self.request.GET["approved"] == "no")
+        self.filter_form = DocumentListFilterForm(self.request.GET)
+        if not self.filter_form.is_valid():
+            return documents.none()
+        return self._ordered_documents(self._filtered_documents(documents))
+
+    def _filtered_documents(self, documents):
+        for parameter, field, _ in self.columns:
+            value = self.filter_form.cleaned_data[parameter]
+            if value not in ("", None):
+                if parameter == "approved":
+                    documents = documents.filter(approved_revision__isnull=value == "no")
+                else:
+                    lookup = field if parameter == "revision" else field + "__icontains"
+                    documents = documents.filter(**{lookup: value})
         return documents
+
+    def _ordered_documents(self, documents):
+        sort = self.request.GET.get("sort", "")
+        column = next((item for item in self.columns if item[0] == sort.lstrip("-")), None)
+        if column is None:
+            return documents.order_by("-created_at", "id")
+        expression = F(column[1]) if column[0] in {"revision", "approved"} else Lower(column[1])
+        order = expression.desc(nulls_last=True) if sort.startswith("-") else expression.asc(nulls_last=True)
+        return documents.order_by(order, "id")
 
     def get_context_data(self, **kwargs):
         query = self.request.GET.copy()
         query.pop("page", None)
-        return super().get_context_data(pagination_query=query.urlencode(), **kwargs)
+        columns = []
+        for parameter, _, label in self.columns:
+            current = self.request.GET.get("sort", "")
+            query["sort"] = "-" + parameter if current == parameter else parameter
+            columns.append({
+                "label": label, "filter": self.filter_form[parameter], "url": "?" + query.urlencode(),
+                "direction": "ascending" if current == parameter else
+                    "descending" if current == "-" + parameter else "none",
+            })
+        query = self.request.GET.copy()
+        query.pop("page", None)
+        return super().get_context_data(
+            columns=columns, filter_form=self.filter_form,
+            pagination_query=query.urlencode(), **kwargs,
+        )
 
 
 class RunView(LoginRequiredMixin, DetailView):

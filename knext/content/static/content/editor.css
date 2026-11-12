@@ -19,6 +19,15 @@
 #editor-bubbles a:hover circle,#editor-bubbles a:focus circle{fill:#356859;stroke:#f5a64e;stroke-width:3}
 #editor-bubbles a:focus{outline:none}
 .editor-actions{margin-top:.8rem}
+.editor-layout.ai-open{grid-template-columns:minmax(0,1.2fr) minmax(20rem,1fr)}
+.ai-open #editor-ai{grid-column:2;grid-row:1 / span 3}
+.ai-open #editor-preview,.ai-open #editor-network{grid-column:1}
+.editor-ai textarea,.editor-ai select{width:100%;margin-bottom:.6rem}
+.editor-ai textarea{min-height:0}
+.editor-ai button{margin:.3rem 0}
+.editor-ai h3{font-size:1rem}
+#ai-original{max-height:25vh}
 #editor-preview-body pre{white-space:pre;overflow:auto}
 @media(max-width:1150px){.editor-layout.network-open{grid-template-columns:minmax(15rem,.7fr) minmax(0,1.3fr)}.network-open #editor-preview{grid-column:1/-1}}
 @media(max-width:750px){.editor-layout,.editor-layout.network-open,.editor-layout.preview-closed,.editor-layout.network-open.preview-closed{grid-template-columns:minmax(0,1fr)}.editor-writing textarea{min-height:45vh}}
+@media(max-width:750px){.editor-layout.ai-open{grid-template-columns:minmax(0,1fr)}.ai-open #editor-ai{grid-column:auto;grid-row:auto}}

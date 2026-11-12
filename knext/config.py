@@ -8,6 +8,7 @@ from typing import Any
 
 import yaml
 from jsonschema import Draft7Validator
+from ki_core.schema_manager import get_schema_path
 from wissenswiki_core.relations import build_catalog
 from yaml_cfg_wizard import ConfigResolver
 from yaml_cfg_wizard.core import (
@@ -118,6 +119,14 @@ def load_config(root: Path | None = None) -> dict[str, Any]:
         schema = load_yaml_file(SCHEMA_FILE)
         if not schema:
             raise ConfigurationError(f"Konfigurationsschema fehlt: {SCHEMA_FILE}")
+        shared = load_yaml_file(get_schema_path())
+        for key in ("llm", "http"):
+            schema["properties"][key] = shared["properties"][key]
+        schema["properties"]["llm"]["properties"]["provider"]["default"] = "openai"
+        for provider in ("openai", "ki"):
+            schema["properties"]["llm"]["properties"]["providers"]["properties"][provider]["properties"]["api_key"].update(
+                {"writeOnly": True, "x-secret": True},
+            )
         profiles = _selected_layer(root, "profiles", "KI_PROFILE")
         stages = _selected_layer(root, "stages", "KI_STAGE")
         _check_yaml_files(root, [*profiles, *stages])

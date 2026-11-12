@@ -2,6 +2,7 @@
 
 from django.contrib import admin
 
+from .ai_models import TextProposal
 from .models import (
     ContentDocument, ContentRevision, ExtractionSnapshot, ImportRun, SourceAsset, SourceRegistration,
     ManagedDomain,
@@ -48,6 +49,7 @@ admin.site.register(FilesystemArtifact, ProvenanceAdmin)
 admin.site.register(ImportBatch, ProvenanceAdmin)
 admin.site.register(ImportJob, ProvenanceAdmin)
 admin.site.register(JobAttempt, ProvenanceAdmin)
+admin.site.register(TextProposal, ProvenanceAdmin)
 for graph_model in (
     ContentResource, BlockSnapshot, RelationType, ResourceRelation,
     ContentCollection, CollectionEntry, CollectionLink,

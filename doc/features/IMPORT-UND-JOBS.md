@@ -5,7 +5,7 @@ scope: features
 purpose: "Beschreibt Batchimport, Ablage, Jobfortschritt und Workerbedienung."
 created: "2026-11-11 06"
 updated: "2026-11-11 23"
-update_reason: "Getrennte Tabellenauswahl mit Header-Checkboxen und zugeordneten Aktionen beschrieben"
+update_reason: "Eigenständigen Importworker-Dienst in stackctl und dessen Bedienung beschrieben"
 status: active
 agent_project: ki-knowledge-next
 relations:
@@ -124,7 +124,7 @@ Inventur beliebiger alter Verwaltungsverzeichnisse.
 ## Worker und Fehler [worker-und-fehler]
 
 ```yaml block-meta
-updated: "2026-11-11 22"
+updated: "2026-11-11 23"
 status: active
 relations:
   - target: ../architecture/IMPORT-UND-JOBS.md#worker-und-zustaende
@@ -135,9 +135,15 @@ relations:
     reason: Gemeinsame lokale Prozesssteuerung
 ```
 
-`./start` und der lokale `stackctl`-Dienst starten Django und einen separaten
-Importworker gemeinsam. Bei direktem Django-/IDE-Start den Worker zusätzlich
-im selben Konfigurationskontext starten:
+`./start` startet Django und einen separaten Importworker gemeinsam.
+In `stackctl` sind `django` und `import-worker` eigenständige Dienste:
+`stackctl start` startet beide, `stackctl start import-worker` nur den Worker.
+Status und Logs stehen mit `stackctl status import-worker` und
+`stackctl logs import-worker` bereit. `stackctl run django` startet allein
+den Webserver.
+
+Bei direktem Django-/IDE-Start den Worker zusätzlich im selben
+Konfigurationskontext starten:
 
 ```bash
 .venv/bin/python manage.py content_worker

@@ -2,19 +2,5 @@
 {% block content %}
 <h1>Editor</h1>
 <p>Texte bearbeiten, das Bubble-Netz zuschalten und frühere Arbeitsstände wiederherstellen.</p>
-<form method="get" class="panel">
-<label for="editor-search">Titel suchen</label><input id="editor-search" name="q" value="{{ request.GET.q }}">
-{% if request.GET.domain %}<input type="hidden" name="domain" value="{{ request.GET.domain }}">{% endif %}
-<button>Filtern</button>
-</form>
-<section class="panel"><h2>Dokument wählen</h2>
-<table><thead><tr><th>Text</th><th>Domäne und Quelle</th><th>Freigabe</th></tr></thead><tbody>
-{% for document in documents %}
-<tr><td><a href="{% url 'content:editor' document.pk %}">{{ document.title }}</a></td>
-<td>{{ document.run.source.domain }} · {{ document.run.source.filename }}</td>
-<td>{% if document.approved_revision %}Freigegebene Fassung vorhanden{% else %}Arbeitsstand{% endif %}</td></tr>
-{% empty %}<tr><td colspan="3">Keine passenden Dokumente. Im <a href="{% url 'content:inventory' %}">Quellbestand</a> Quellen erfassen und in Markdown umwandeln.</td></tr>{% endfor %}
-</tbody></table>
-{% include "content/pagination.html" %}
-</section>
+{% include "content/document_table.html" with editor_list=True %}
 {% endblock %}

@@ -3,10 +3,10 @@ title: "Konfiguration und lokaler Start"
 project: ki-knowledge-next
 agent_project: ki-knowledge-next
 scope: features
-purpose: "Beschreibt die implementierte YAML-Konfiguration, lokalen Startwege und Readiness-Prüfung, ohne geplantes Produktionsdeployment oder KI als verfügbar auszugeben."
+purpose: "Beschreibt die implementierte YAML-Konfiguration, KI-Aktivierung, lokalen Startwege und Readiness-Prüfung."
 created: "2026-11-11T04:56:00+01:00"
-updated: "2026-11-11 21"
-update_reason: "Lokalen gemeinsamen Start von Django und Importworker beschrieben"
+updated: "2026-11-12 00"
+update_reason: "KI-Aktivierung mit gemeinsamen Providerfeldern und neutralem Verbindungstest ergänzt"
 status: active
 relations:
   - target: "README.md"
@@ -14,7 +14,7 @@ relations:
     reason: "Index der implementierten Features"
   - target: "../architecture/KONFIGURATION-UND-KI.md"
     type: depends-on
-    reason: "Schemazuständigkeit und Abgrenzung der späteren KI-/Wizard-Anbindung"
+    reason: "Schemazuständigkeit und Abgrenzung des weiteren KI-/Wizard-Ausbaus"
   - target: "../deployment/ENTWURF.md"
     type: depends-on
     reason: "Noch offene Produktionsintegration"
@@ -25,7 +25,7 @@ relations:
 ## Konfiguration [konfiguration]
 
 ```yaml block-meta
-updated: "2026-11-11 05"
+updated: "2026-11-11 23"
 status: active
 relations:
 - target: ../architecture/KONFIGURATION-UND-KI.md#konfigurationsentscheidung
@@ -35,7 +35,7 @@ relations:
 
 **Implementiert:** Django und `stackctl` verwenden denselben projektlokalen
 Loader auf Basis von `yaml-cfg-wizard`. Das Next-Schema validiert
-Pfad-/Django-Einstellungen und den lokalen Ein-Dienst-Stack.
+Pfad-/Django-Einstellungen und den lokalen Web-/Worker-Stack.
 Unbekannte Felder, ungültige Typen und ausdrücklich gewählte, fehlende
 Stages/Profiles führen zu Fehlern.
 
@@ -134,10 +134,69 @@ seine vorhandenen Kanten. Definitionen bestehender Presetschlüssel dürfen
 nicht geändert werden; doppelte Schlüssel und ungültige Farben werden
 ausdrücklich abgelehnt. Nach Dateikonfigurationsänderungen Webprozesse neu starten.
 
+## KI-Konfiguration [ki-konfiguration]
+
+```yaml block-meta
+updated: "2026-11-12 00"
+status: active
+relations:
+  - target: QUELLEN-UND-TEXTWERKSTATT.md#ki-textvorschlaege
+    type: reference
+    reason: Bedienung der aktivierten KI-Textaufträge
+  - target: ../architecture/KONFIGURATION-UND-KI.md#konfigurationsentscheidung
+    type: depends-on
+    reason: Gemeinsames Provider-/HTTP-Schema ohne zweite Konfigurationssuche
+```
+
+`ki-core` stellt Providerclient und die Schemaabschnitte `llm` und `http`.
+Next konsumiert diese im eigenen Loader; es werden keine Nachbarprojekt-
+oder Home-Konfigurationen automatisch übernommen. KI ist standardmäßig
+deaktiviert. Beispiel in `ki.yaml`:
+
+```yaml
+apps:
+  ki_knowledge_next:
+    ai:
+      enabled: true
+      max_input_chars: 60000
+llm:
+  provider: openai
+  providers:
+    openai:
+      model: gpt-4o-mini
+http:
+  request_timeout: 30
+  verify_ssl: true
+```
+
+Den Schlüssel ausschließlich unter `llm.providers.openai.api_key` in der
+privaten, Git-ignorierten `creds.yaml` hinterlegen. Die schon vorhandene
+Layerpriorität bleibt erhalten. Der Editor zeigt Provider und Modell,
+keine Zugangsdaten. Konfigurationsänderungen erfordern einen Webneustart.
+
+Die Textwerkstatt verlangt einen konkreten Provider (`openai`, `ki` oder
+`ollama`); automatische Erkennung und Mock-Fallback sind hier ausgeschlossen.
+Das HTTP-Zeitlimit liegt zwischen 1 und 120 Sekunden. Der neutrale Test
+sendet ausschließlich eine kurze Testanweisung:
+
+```bash
+.venv/bin/python manage.py content_ai_check
+```
+
+`max_input_chars` begrenzt Zieltext plus Auftrag und Zusatzkontext
+(Standard 60000; konfigurierbar von 1000 bis 200000 Zeichen).
+Der Auftrag umfasst maximal 4000, Zusatzkontext maximal 30000 Zeichen;
+Ergebnisse dürfen maximal 200000 Zeichen enthalten. Vor jeder Generierung
+prüft Next ein nutzerbezogenes Minutenlimit von fünf Aufträgen. Netzwerk- oder
+Providerfehler führen weder zu automatischen Wiederholungen noch zum
+Wechsel auf einen anderen Provider. Ein unterbrochener Browseraufruf
+kann serverseitig bereits verarbeitet worden sein; vor einer neuen
+kostenpflichtigen Anfrage den Editor neu öffnen und den offenen Vorschlag prüfen.
+
 ## Lokaler Start [lokaler-start]
 
 ```yaml block-meta
-updated: "2026-11-11 21"
+updated: "2026-11-11 23"
 status: active
 relations:
 - target: ../deployment/ENTWURF.md#betriebsentscheidung
@@ -156,22 +215,34 @@ Startwege verfügbar:
 | `./start [adresse:port]` | Führt Migrationen aus und startet Django und einen separaten Importworker; Standard `127.0.0.1:8780`, eigener Adressparameter statt Stackport |
 | `./start --lan LAN-IP` | Lauscht auf `0.0.0.0:8780`; ergänzt konkrete IPv4-Adresse und localhost für diesen Prozess, keine Wildcardfreigabe |
 | IDE / `manage.py runserver` | Direkter Django-Start; Worker separat starten und Migrationen vorher ausführen |
-| `stackctl run django` | Startet Django und Importworker gemeinsam im Vordergrund mit `--noreload`; führt keine Migrationen aus |
+| `stackctl start` | Startet die getrennten Dienste `django` und `import-worker`; führt keine Migrationen aus |
+| `stackctl run django` / `stackctl run import-worker` | Startet ausschließlich den gewählten Dienst im Vordergrund |
 
 ```bash
 .venv/bin/python manage.py migrate
 .venv/bin/python -m stackctl spec
-.venv/bin/python -m stackctl run django
+.venv/bin/python -m stackctl start
+.venv/bin/python -m stackctl status
+.venv/bin/python -m stackctl logs import-worker
+.venv/bin/python -m stackctl stop
 ```
 
 `stackctl spec` zeigt den Dienstplan, ohne Dienste zu starten.
-Der lokale Stack verwaltet Web und Worker über `knext.devserver` als einen
-gemeinsamen Startweg; beide bleiben eigene Prozesse. Strg+C oder SIGTERM
-stoppt beide. Ein unerwartetes Prozessende stoppt auch den Partner und
+`stackctl` verwaltet `django` und `import-worker` als getrennte Dienste mit
+eigenem Status, PID und Log. `start`, `stop` und `restart` ohne Dienstnamen
+betreffen beide; mit `import-worker` nur den Worker. Der Worker verwendet
+`port: 0`; sein lokaler Status prüft Prozessidentität und PID, keinen
+HTTP-Endpunkt. Dafür die aktuelle lokale `stackctl`-Version verwenden.
+
+`./start` verwendet weiterhin `knext.devserver` als gemeinsamen
+Vordergrundstarter. Strg+C oder SIGTERM stoppt beide Prozesse.
+Ein unerwartetes Prozessende stoppt auch den Partner und
 zeigt den Fehler an. Der Worker beendet seinen laufenden Job vor dem Stop;
 nach 30 Sekunden erzwingt der lokale Starter einen Abbruch mit Warnung.
 Ein bereits separat laufender Worker muss vor diesem gemeinsamen Start
 gestoppt werden; die Sperre verhindert einen zweiten Worker.
+`./start` und `stackctl start` sind alternative Startwege, nicht parallel
+für dieselbe Installation zu verwenden.
 
 Alle Prozesse verwenden dieselben Konfigurationslayer. Die eingestellten
 Wiki- und Datenwurzeln müssen erreichbar sein; Fehler bleiben im Terminal
@@ -214,7 +285,7 @@ ab. Ein bereiter Endpunkt bestätigt somit nicht alle fachlichen Funktionen.
 ## Grenzen [grenzen]
 
 ```yaml block-meta
-updated: "2026-11-11 20"
+updated: "2026-11-12 00"
 status: active
 relations: []
 ```
@@ -225,8 +296,8 @@ automatisierter Backup-/Restoreablauf sind noch nicht implementiert.
 Die für die Quellenmigration angelegte lokale SQLite-Sicherung ist kein
 allgemeines Deployment-Backupfeature.
 
-KI-Schema, Provider-/Chat-Anbindung und Runtime-Webeditor stehen weiterhin
-im [Konfigurationskonzept](../architecture/KONFIGURATION-UND-KI.md).
+Der weitergehende Domänenchat, Retrieval und Runtime-Webeditor stehen im
+[Konfigurationskonzept](../architecture/KONFIGURATION-UND-KI.md).
 Der geplante Produktionsablauf steht in
 [Betriebsgrundlagen](../deployment/BETRIEB.md); offene Integration steht im
 [Deploymententwurf](../deployment/ENTWURF.md).

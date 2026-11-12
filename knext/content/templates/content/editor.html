@@ -7,6 +7,7 @@
 <div class="editor-toolbar" role="group" aria-label="Ansichten">
 <button type="button" id="toggle-network" aria-expanded="false" aria-controls="editor-network" hidden>Bubble-Netz</button>
 <button type="button" id="toggle-preview" aria-expanded="true" aria-controls="editor-preview" hidden>Vorschau</button>
+<button type="button" id="toggle-ai" aria-expanded="false" aria-controls="editor-ai" hidden>KI-Werkstatt</button>
 <span id="editor-status" role="status" aria-live="polite">Gespeicherter Arbeitsstand</span>
 </div>
 <div id="editor-layout" class="editor-layout">
@@ -41,6 +42,39 @@ Ungespeicherte Eingaben werden dabei verworfen.</p>
 <section class="panel" id="editor-preview"><h2>Vorschau</h2>
 <p class="muted" id="preview-state">Gespeicherte Fassung; nicht automatisch veröffentlicht.</p>
 <article class="prose" id="editor-preview-body">{{ body_html }}</article></section>
+<aside class="panel editor-ai" id="editor-ai" hidden data-propose-url="{% url 'content:ai-propose' document.pk %}">
+<h2>KI-Werkstatt</h2>
+<p>{{ ai.label }}</p>
+{% if ai.available %}
+<p class="muted">Nur der unten angezeigte Zieltext, dein Auftrag und ausdrücklich ergänzter Kontext werden an den Provider gesendet.</p>
+<div class="editor-actions"><button type="button" id="ai-use-selection">Textauswahl verwenden</button>
+<button type="button" id="ai-use-whole">Ganzen Text verwenden</button></div>
+<p id="ai-scope" role="status">Bitte eine Textstelle oder den ganzen Text wählen.</p>
+<label for="ai-original">Zieltext · Original</label><textarea id="ai-original" rows="8" readonly></textarea>
+<label for="ai-task">Vorlage</label>
+<select id="ai-task"><option value="">Eigener Auftrag</option>
+<option value="Korrigiere Rechtschreibung, Grammatik und Zeichensetzung. Erhalte Bedeutung und Gliederung.">Sprachlich korrigieren</option>
+<option value="Formuliere klarer und präziser. Erhalte Bedeutung, Block-IDs und Metadaten.">Klarer formulieren</option>
+<option value="Fasse die wesentlichen Gedanken knapp zusammen.">Zusammenfassen</option>
+<option value="Entwickle den Zieltext anhand meiner ergänzenden Vorgabe weiter.">Weiterentwickeln</option></select>
+<label for="ai-instruction">Dein Auftrag</label><textarea id="ai-instruction" rows="3" maxlength="4000"></textarea>
+<details><summary>Zusatzkontext ausdrücklich ergänzen</summary>
+<label for="ai-context-preset">Kontextvorlage</label>
+<select id="ai-context-preset"><option value="">Vorlage wählen</option>
+<option value="Der Text wird in einer Wissensverarbeitungssoftware weiterverwendet. Wichtig ist seine semantische Erfassung: Gliedere ihn nach zusammengehörigen Gedanken in sinnvolle Abschnitte und finde passende, prägnante Markdown-Überschriften, die den jeweiligen Kerngedanken benennen. Orientiere Abschnittsgrenzen an Bedeutungswechseln statt an bloßer Textlänge. Bewahre Aussagen, Zusammenhänge und die Stimme des Originals; vorhandene Block-IDs und Metadaten bleiben erhalten.">Semantische Gliederung</option>
+</select>
+<button type="button" id="ai-add-context-preset">In Zusatzkontext einfügen</button>
+<p class="muted">Die Vorlage ergänzt vorhandenen Kontext. Vor dem Absenden kannst du alles bearbeiten.</p>
+<label for="ai-context">Zusatztext / Attribute (optional)</label><textarea id="ai-context" rows="4" maxlength="30000"></textarea></details>
+<button type="button" id="ai-generate">Vorschlag erstellen</button>
+<p id="ai-status" role="status" aria-live="polite">Es wird nichts automatisch übernommen oder veröffentlicht.</p>
+<section id="ai-result" hidden><h3>Vorschlag prüfen</h3>
+<label for="ai-proposal">Ersatztext · vor Übernahme bearbeitbar</label><textarea id="ai-proposal" rows="12"></textarea>
+<p class="muted">Übernehmen ersetzt den gewählten Bereich und speichert. Auch dein ungespeicherter Ausgangstext wird vorher als Sicherung bewahrt. Die Freigabe bleibt unverändert.</p>
+<div class="editor-actions"><button type="button" id="ai-accept">Übernehmen und speichern</button>
+<button type="button" id="ai-discard">Verwerfen</button></div></section>
+{% else %}<p>Betreiber müssen KI in der lokalen Konfiguration aktivieren und einen Providerzugang hinterlegen. Zugangsdaten werden hier nicht angezeigt.</p>{% endif %}
+</aside>
 </div>
 <details class="panel"><summary>Herkunft und Freigabe</summary>
 <p><a href="{% url 'content:document' document.pk %}" data-leave-editor>Dokumentdetails und Freigabe</a> ·
@@ -50,5 +84,7 @@ Ungespeicherte Eingaben werden dabei verworfen.</p>
 </details>
 {{ editor_outline|json_script:"editor-outline-data" }}
 {{ editor_saved|json_script:"editor-saved-data" }}
+{{ ai_pending|json_script:"editor-ai-pending" }}
 <script src="{% static 'content/editor.js' %}" defer></script>
+<script src="{% static 'content/editor-ai.js' %}" defer></script>
 {% endblock %}

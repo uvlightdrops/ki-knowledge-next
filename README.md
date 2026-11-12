@@ -2,8 +2,8 @@
 project: ki-knowledge-next
 scope: Einrichtung und Start des neuen Django-Projekts
 created: null
-updated: "2026-11-11 22"
-update_reason: Gemeinsamen lokalen Start von Webserver und Importworker beschrieben
+updated: "2026-11-12 00"
+update_reason: ki-core als Grundlage der KI-Textwerkstatt im Installationsweg ergänzt
 status: draft
 agent_project: ki-knowledge
 relations:
@@ -24,14 +24,14 @@ Konzept: `../ki-knowledge/doc/architecture/WEITERENTWICKLUNG.md`, Abschnitt `fre
 ## Einrichtung [setup]
 
 ```yaml block-meta
-updated: "2026-11-11 22"
+updated: "2026-11-12 00"
 status: active
 relations: []
 ```
 
 ```bash
 python3 -m venv .venv
-.venv/bin/pip install -e ../yaml_cfg_wizard -e ../stackctl -e ../wissenswiki-core -e '../wissenswiki-django[test]' -e '.[test,deploy]'
+.venv/bin/pip install -e ../yaml_cfg_wizard -e ../ki-core -e ../stackctl -e ../wissenswiki-core -e '../wissenswiki-django[test]' -e '.[test,deploy]'
 .venv/bin/python manage.py migrate
 .venv/bin/python manage.py createsuperuser
 ./start                      # http://127.0.0.1:8780/
@@ -90,6 +90,12 @@ Formatgrenzen, Datenmodell und offene Ausbaustufen stehen im
 
 ## Konfiguration [configuration]
 
+```yaml block-meta
+updated: "2026-11-11 23"
+status: active
+relations: []
+```
+
 Django und `stackctl` verwenden jetzt denselben Loader `knext.config.load_config`
 auf Basis von `yaml-cfg-wizard`. Das paketierte Schema
 `knext/schema/next.schema.yaml` definiert die Appfelder und ihre Defaults.
@@ -127,10 +133,18 @@ Eine ausdrücklich gewählte, fehlende Stage ist ein Fehler.
 ```bash
 .venv/bin/python -m knext.config       # validiert, ohne Werte/Secrets auszugeben
 .venv/bin/python -m stackctl spec      # aufgelöster Dienstplan, keine Dienste starten
-.venv/bin/python -m stackctl run django
+.venv/bin/python -m stackctl start     # django und import-worker
+.venv/bin/python -m stackctl status
+.venv/bin/python -m stackctl logs import-worker
+.venv/bin/python -m stackctl stop
 ```
 
-`stackctl run django` läuft im Vordergrund, ohne automatische Migrationen.
+`django` und `import-worker` sind getrennt steuerbare `stackctl`-Dienste.
+`stackctl run django` läuft nur mit dem Webserver im Vordergrund;
+`stackctl run import-worker` nur mit dem Worker. Für portlose Worker die
+aktuelle lokale `stackctl`-Version verwenden. `./start` und `stackctl start`
+sind alternative Startwege für dieselbe Installation.
+`stackctl` führt keine automatischen Migrationen aus.
 Vor dem ersten Start `manage.py migrate` ausführen. Der Readiness-Endpunkt
 `/health/ready/` ist ohne Anmeldung erreichbar und liefert erst dann HTTP 200,
 wenn die Datenbank erreichbar ist und keine Migrationen ausstehen; sonst

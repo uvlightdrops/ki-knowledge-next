@@ -5,8 +5,12 @@ stack:
     django:
       host: "127.0.0.1"
       port: 8780
-      command: ["{python}", -m, knext.devserver, --noreload, "{host}:{port}"]
+      command: ["{python}", "{root}/manage.py", runserver, --noreload, "{host}:{port}"]
       health_path: /health/ready/
       health_timeout: 30
       health_retries: 60
-      marker: knext.devserver
+      marker: manage.py runserver
+    import-worker:
+      port: 0
+      command: ["{python}", "-u", "{root}/manage.py", content_worker]
+      marker: manage.py content_worker

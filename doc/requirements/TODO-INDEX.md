@@ -5,8 +5,8 @@ agent_project: ki-knowledge-next
 scope: requirements
 purpose: "Thematischer Arbeitsvorrat mit eigenständig umzusetzenden einfachen Aufgaben und Konzeptverweisen für komplexere Themen."
 created: "2026-11-11T14:46:00+01:00"
-updated: "2026-11-11 22"
-update_reason: "Importworkerstart, Jobfeedback, Mehrfachabbruch und kompakte Quellentabelle nach DONE aufgenommen"
+updated: "2026-11-12 05"
+update_reason: "Spaltenfilter, Sortierung und kompakte Beziehungstypen im internen Bereich nach DONE aufgenommen"
 status: active
 relations:
   - target: "../README.md"
@@ -49,7 +49,7 @@ in der alten ki kn version hatten wir einigermaßen landing page aufgebaut.
 
 #### Editor generell
 
-Offen sind Attributbereich, zusätzlicher Vergleich und KI-Vorschlagsarbeit.
+Offen sind Attributbereich, zusätzlicher Vergleich und strukturierte KI-Vorschläge.
 [Editor- und KI-Entwurf](../architecture/ui/EDITOR-UND-KI.md)
 
 #### Spielerische Seitenvarianten
@@ -62,6 +62,10 @@ temporär in der gemeinsamen Navigation verankern.
 
 ### UI DONE
 
+- Werkstatt und Editor-Textliste mit getrennten Herkunftsspalten,
+  waagrechten Spaltenfiltern und auf-/absteigender Sortierung;
+  Beziehungstypen als kompakte Tabelle.
+  [Bedienung](../features/QUELLEN-UND-TEXTWERKSTATT.md#einstieg)
 - Die gemeinsame Inhaltsseiten-Hülle zeigt keinen „Prototyp“-Hinweis mehr.
 - Wiki-Inhaltsansichten und Bestandteile-Vorschau zeigen bereinigtes Markdown
   mit Überschriften, Listen, Tabellen und Codeblöcken; Quelltext bleibt zugänglich.
@@ -92,18 +96,16 @@ Tabellenansicht der files mit filter line darüber, nach allem was sinnvoll ersc
 
 #### KI-Funktionen
 
-Die KI-anbindung verwendet ki-core und das yaml config system, sie hat gut funktioniert über openai in der alten plattform. Versuche das zu übernehmen bzw wiederherzustellen. 
+Der erste Anschluss verwendet ki-core und die gemeinsame YAML-Auflösung.
+Offen sind strukturierte Attributvorschläge, neue Blockgrenzen und die
+Auswahl zusätzlicher Ressourcen als Kontext.
 
 [Konzept und Übernahmebedingungen](../architecture/KONFIGURATION-UND-KI.md#ki-funktionskarte)
 
-Erster Anschluss: begrenzte Text-/Attributaufträge statt vollständigem
-Domänenchat. [Vorschlagsarbeit](../architecture/ui/EDITOR-UND-KI.md#ki-vorschlaege)
-
-###### Texterstellung nach Vorgabe einiger Sätze
+Begrenzte Aufträge statt vollständigem Domänenchat.
+[Vorschlagsarbeit](../architecture/ui/EDITOR-UND-KI.md#ki-vorschlaege)
 
 ###### Texte semantisch aufteilen in kleinere Blöcke
-
-###### Texte korrigieren, syntaktisch und logisch
 
 ###### Schlagworte erstellen
 
@@ -111,6 +113,11 @@ Domänenchat. [Vorschlagsarbeit](../architecture/ui/EDITOR-UND-KI.md#ki-vorschla
 
 ### intern DONE
 
+- KI-Textworkflow im Editor mit Auswahl/Body, freiem Auftrag, Vorlagen und
+  explizitem Zusatztext. Vorschläge prüfen, bearbeiten, verwerfen oder mit
+  gesichertem Ausgangspuffer übernehmen; Freigabe und Originale bleiben
+  getrennt. OpenAI-Zugang über ki-core mit neutralem Test geprüft.
+  [Bedienung](../features/QUELLEN-UND-TEXTWERKSTATT.md#ki-textvorschlaege)
 
 
 

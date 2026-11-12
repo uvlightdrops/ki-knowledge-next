@@ -125,6 +125,7 @@
         }
         if (!event.defaultPrevented) leaving = true;
     });
+    form.addEventListener("editor:saved", () => { leaving = true; });
     for (const link of document.querySelectorAll("[data-leave-editor]")) link.addEventListener("click", event => {
         if (dirty() && !confirm("Ungespeicherte Änderungen verwerfen?")) event.preventDefault();
         else leaving = true;

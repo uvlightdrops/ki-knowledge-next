@@ -8,6 +8,7 @@ version = "0.1.0"
 description = "Frisch aufgesetztes Django-Projekt für die Weiterentwicklung von ki-knowledge"
 requires-python = ">=3.12"
 dependencies = [
+    "ki-core>=0.1.0a1",
     "Django>=6.0",
     "wissenswiki-django",
     "pypdf>=5",
@@ -41,6 +42,10 @@ config_key = "stack"
 name = "yaml-cfg-wizard"
 path = "yaml_cfg_wizard"
 url = "https://github.com/uvlightdrops/yaml-cfg-wizard.git"
+
+[[tool.stackctl.siblings]]
+name = "ki-core"
+url = "https://github.com/uvlightdrops/ki-core.git"
 
 [[tool.stackctl.siblings]]
 name = "wissenswiki-core"

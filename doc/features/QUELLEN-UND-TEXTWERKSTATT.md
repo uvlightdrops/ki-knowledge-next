@@ -5,8 +5,8 @@ agent_project: ki-knowledge-next
 scope: features
 purpose: "Beschreibt die vorhandenen Arbeitswege von Quellenaufnahme bis Textbearbeitung, Wiederherstellung und Freigabe."
 created: "2026-11-11T04:56:00+01:00"
-updated: "2026-11-11 21"
-update_reason: "Editor mit zuschaltbarer Bubble-Navigation, Eingabevorschau und Sicherungsworkflow beschrieben"
+updated: "2026-11-12 05"
+update_reason: "Kontextvorlage für semantische Gliederung zusätzlich zu den kompakten Textlisten beschrieben"
 status: active
 relations:
   - target: "../architecture/CONTENT-MODELL.md"
@@ -28,7 +28,7 @@ relations:
 ## Einstieg [einstieg]
 
 ```yaml block-meta
-updated: "2026-11-11 21"
+updated: "2026-11-12 05"
 status: active
 relations:
   - target: ../architecture/ui/EDITOR-UND-KI.md#arbeitsraum
@@ -49,6 +49,16 @@ ihre gemeinsame Oberfläche weiter.
 Dokumentübersicht. Dort lassen sich Texte, Herkunft, frühere Fassungen und
 Freigabestand direkt öffnen. Die [Domänenauswahl](DOMAENEN.md) begrenzt
 die angezeigten Inhalte.
+
+Werkstatt und Editor-Textliste zeigen Titel, Domäne, Ordner, Dateiname,
+Arbeitsstand und Freigabe in eigenen Spalten. Die Filter stehen waagrecht
+über der jeweiligen Spalte; Spaltenüberschriften wechseln zwischen
+auf- und absteigender Sortierung. Filter und Sortierung gelten für den
+gesamten angezeigten Domänenbestand und bleiben beim Seitenwechsel erhalten.
+„Zurücksetzen“ entfernt die Tabellenfilter, nicht die aktive Domäne.
+Ordner und Dateiname beziehen sich auf die Quelle: Der Ordner zeigt ihren
+zuletzt registrierten Pfad innerhalb der Domäne. Ohne Pfadregistrierung
+steht dort ein Strich; die DB-Arbeitsfassung hat keinen eigenen Dateipfad.
 
 Der Arbeitsweg lautet: **Quelle erfassen → in Markdown umwandeln →
 Text bearbeiten → Fassung freigeben → Ausgabe erzeugen**.
@@ -116,7 +126,7 @@ Die Batch-Auswahl unter `/content/sources/` reiht mehrere Quellen ein;
 ## Text bearbeiten [text-bearbeiten]
 
 ```yaml block-meta
-updated: "2026-11-11 21"
+updated: "2026-11-12 00"
 status: active
 relations:
 - target: ../architecture/ui/EDITOR-UND-KI.md#arbeitsraum
@@ -161,12 +171,73 @@ erhalten; „Gespeicherten Stand laden“ verwirft sie ausdrücklich.
 
 Ohne JavaScript bleiben Speichern, gespeicherte Vorschau und Wiederherstellen
 verfügbar; Bubble-Navigation und Eingabevorschau benötigen JavaScript.
-Attribute und KI-Vorschläge sind in dieser Variante noch nicht angeschlossen.
+Die KI-Werkstatt ergänzt [prüfbare Textvorschläge](#ki-textvorschlaege).
+Der Attributeditor ist noch nicht angeschlossen.
+
+## KI-Textvorschläge [ki-textvorschlaege]
+
+```yaml block-meta
+updated: "2026-11-12 05"
+status: active
+relations:
+  - target: ../architecture/ui/EDITOR-UND-KI.md#ki-vorschlaege
+    type: depends-on
+    reason: Sichtbarer Kontext und bewusste Vorschlagsübernahme
+  - target: KONFIGURATION-UND-START.md#ki-konfiguration
+    type: reference
+    reason: Betreiberaktivierung, Providerzugang und neutraler Verbindungstest
+  - target: ../architecture/TEXTWERKSTATT-VERTRAG.md#markierungen-und-ki
+    type: depends-on
+    reason: Eindeutige Auswahlanker und geprüfter Ausgangsstand
+  - target: ../architecture/KONFIGURATION-UND-KI.md#ki-funktionskarte
+    type: reference
+    reason: Trennung des implementierten Textworkflows von späteren KI-Fähigkeiten
+  - target: ../architecture/KONFIGURATION-UND-KI.md#ki-bereinigung
+    type: reference
+    reason: Verbleibende Validierungs- und Datenverträge für den strukturierten Ausbau
+```
+
+Im Editor öffnet **KI-Werkstatt** den optionalen Bereich neben dem Text.
+„Textauswahl verwenden“ übernimmt die markierte Stelle, „Ganzen Text
+verwenden“ den vollständigen Body. Der tatsächlich gesendete Zieltext wird
+schreibgeschützt angezeigt. Provider und Modell sind sichtbar.
+
+Eine Vorlage hilft beim Korrigieren, klareren Formulieren, Zusammenfassen
+oder Weiterentwickeln; der Auftrag bleibt frei bearbeitbar. Zusätzliches
+Material und Attribute werden ausdrücklich als Zusatztext eingetragen.
+Unter „Zusatzkontext ausdrücklich ergänzen“ lässt sich eine Kontextvorlage
+wählen und mit „In Zusatzkontext einfügen“ an vorhandenen Text anhängen.
+„Semantische Gliederung“ richtet die Bearbeitung auf zusammengehörige
+Gedanken, sinnvolle Abschnittsgrenzen und prägnante Markdown-Überschriften
+für die weitere Wissensverarbeitung aus. Der eingefügte Kontext bleibt
+frei bearbeitbar; die Auswahl allein sendet keinen Auftrag.
+Nur Zieltext, Auftrag und dieser Zusatzkontext gehen an den Provider,
+nicht automatisch das übrige Dokument, sein Titel oder die Domäne.
+
+„Vorschlag erstellen“ verändert den Arbeitsstand nicht. Der Ersatztext
+erscheint neben dem Original und lässt sich vor der Übernahme bearbeiten.
+„Übernehmen und speichern“ ersetzt genau den gewählten Bereich. War der
+Ausgangstext noch ungespeichert, wird dieser vorher als eigener
+Sicherungsstand bewahrt. Bereits gespeicherte Stände bleiben ebenfalls
+erhalten; die Freigabe ändert sich nicht.
+
+Bei verändertem Text, Titel oder DB-Arbeitsstand wird die Übernahme
+abgelehnt. „Verwerfen“ verändert den Text nicht. Der letzte offene eigene
+Vorschlag wird beim erneuten Öffnen des Editors wieder angezeigt; bei
+abweichendem Ausgangstext bleibt er nur zum Vergleichen oder Verwerfen.
+Nicht übernommene manuelle Änderungen am Vorschlag bestehen nur im Browser;
+beim Verlassen erscheint eine Warnung.
+
+Aufträge, Kontext, Ausgangspuffer, Textanker, Provider, Modell und Ergebnisse
+bleiben in der DB nachvollziehbar. Nur der Auftraggeber darf seinen
+Vorschlag übernehmen oder verwerfen. Es gibt noch keine automatische
+Aufbewahrungsbereinigung. Der erste Anschluss erzeugt Textvorschläge;
+strukturierte Attributänderungen und neue Blockidentitäten folgen separat.
 
 ## Historie und Wiederherstellung [historie-und-wiederherstellung]
 
 ```yaml block-meta
-updated: "2026-11-11 21"
+updated: "2026-11-12 00"
 status: active
 relations:
 - target: ../architecture/ui/EDITOR-UND-KI.md#sicherungsstaende
@@ -191,14 +262,14 @@ Der vorherige Stand ist vorausgewählt; andere Sicherungen lassen sich nach
 Zeitpunkt, Titel und Bearbeiter auswählen. Vorheriges Lesen und Vergleichen
 bleibt möglich. Wiederherstellen bewahrt den aktuellen gespeicherten Stand;
 ungespeicherte Eingaben werden nach Bestätigung verworfen.
-Die Speicherung erfolgt nur beim ausdrücklichen Speichern oder
-Wiederherstellen; automatische Sicherungen von Eingabepuffern sind noch
+Die Speicherung erfolgt beim ausdrücklichen Speichern, Wiederherstellen
+oder Übernehmen eines KI-Vorschlags. Automatische Sicherungen von Eingabepuffern sind noch
 nicht implementiert.
 
 ## Gliederungen und Zusammenstellungen [gliederungen-und-zusammenstellungen]
 
 ```yaml block-meta
-updated: "2026-11-11 21"
+updated: "2026-11-12 05"
 status: active
 relations:
   - target: "../architecture/CONTENT-MODELL.md#app-und-grenzen"
@@ -219,8 +290,9 @@ veraltete Bearbeitungen werden zurückgewiesen.
 
 Der Ressourcenkatalog erschließt Dokumente, Blöcke, Ordner und
 Zusammenstellungen mit ihren Beziehungen und gespeicherten Textständen.
-Ordner dienen der Gruppierung. Beziehungstypen lassen sich mit Definition
-ergänzen; die gemeinsame Werteliste beschreibt der
+Ordner dienen der Gruppierung. Die kompakte Beziehungstypentabelle zeigt
+Bezeichnung, Schlüssel, Definition und Verwendung (aktiv oder nur lesbar).
+Beziehungstypen lassen sich mit Definition ergänzen; die gemeinsame Werteliste beschreibt der
 [Relationskatalog](KONFIGURATION-UND-START.md#relationenkatalog).
 Beziehungen können Domänengrenzen überschreiten.
 

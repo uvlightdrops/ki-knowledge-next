@@ -39,8 +39,28 @@ def test_defaults_preserve_local_settings(config_root):
     assert config["apps"][APP]["django"]["debug"] is True
     assert config["apps"][APP]["paths"]["var"] == "var"
     assert config["stack"]["services"]["django"]["port"] == 8780
-    assert set(config["stack"]["services"]) == {"django"}
+    assert set(config["stack"]["services"]) == {"django", "import-worker"}
     assert config["apps"][APP]["relation_catalog"] == {"preset": "documentation", "types": []}
+    assert config["apps"][APP]["ai"] == {"enabled": False, "max_input_chars": 60000}
+    assert config["llm"]["provider"] == "openai"
+    assert config["http"]["request_timeout"] == 30
+
+
+def test_ai_config_uses_shared_schema_and_local_credentials(config_root):
+    write_layer(config_root, "ki.yaml", {
+        "apps": {APP: {"ai": {"enabled": True}}},
+        "llm": {"provider": "openai", "providers": {"openai": {"model": "configured"}}},
+    })
+    write_layer(config_root, "creds.yaml", {
+        "llm": {"providers": {"openai": {"api_key": "synthetic-private"}}},
+    })
+    config = load_config(config_root)
+    assert config["apps"][APP]["ai"]["enabled"] is True
+    assert config["llm"]["providers"]["openai"]["model"] == "configured"
+    assert config["llm"]["providers"]["openai"]["api_key"] == "synthetic-private"
+    write_layer(config_root, "ki.yaml", {"apps": {APP: {"ai": {"max_input_chars": 0}}}})
+    with pytest.raises(ConfigurationError):
+        load_config(config_root)
 
 
 def test_relation_catalog_config_validates_presets_and_custom_definitions(config_root):
@@ -198,11 +218,20 @@ def test_local_stack_uses_same_loader_without_automatic_migration(config_root):
     assert django.port == 18780
     assert django.url == "http://127.0.0.1:18780/health/ready/"
     assert django.command[1:] == [
-        "-m", "knext.devserver", "--noreload", "127.0.0.1:18780",
+        str(PROJECT_ROOT / "manage.py"), "runserver", "--noreload", "127.0.0.1:18780",
     ]
     assert django.prepare == []
     assert django.health_timeout == 30
     assert django.health_retries == 60
+    worker = stack.service("import-worker")
+    assert worker.command[1:] == ["-u", str(PROJECT_ROOT / "manage.py"), "content_worker"]
+    assert worker.port == 0
+    assert worker.health_path == ""
+    assert worker.marker == "manage.py content_worker"
+    assert worker.prepare == []
+    assert {service.name for service in stack.select([])} == {"django", "import-worker"}
+    assert [service.name for service in stack.select(["django"])] == ["django"]
+    assert [service.name for service in stack.select(["import-worker"])] == ["import-worker"]
 
 
 def test_stackctl_manifest_loads_real_project_config(config_root, monkeypatch):
@@ -211,7 +240,7 @@ def test_stackctl_manifest_loads_real_project_config(config_root, monkeypatch):
     monkeypatch.setenv("KI_CFG_STACK__SERVICES__DJANGO__PORT", "18782")
     spec = load_raw_spec(find_project(PROJECT_ROOT))
     assert spec["services"]["django"]["port"] == 18782
-    assert set(spec["services"]) == {"django"}
+    assert set(spec["services"]) == {"django", "import-worker"}
 
 
 @pytest.mark.parametrize("debug", ["true", "false"])
