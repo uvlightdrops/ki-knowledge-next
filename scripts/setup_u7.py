@@ -198,6 +198,32 @@ def verify_proxy(domain: str, open_ports: set[int]) -> None:
                 thread.join()
 
 
+def existing_environment() -> Path | None:
+    """Validate an existing project environment without changing it."""
+    environment = ROOT / ".venv"
+    if not environment.exists() and not environment.is_symlink():
+        return None
+    python = environment / "bin/python"
+    if environment.is_symlink() or not (environment / "pyvenv.cfg").is_file() or not python.is_file():
+        raise SetupError(f"Keine gültige lokale Python-Umgebung: {environment}")
+    output = run(str(python), "-I", "-c",
+                 "import json, sys; import pip; "
+                 "print(json.dumps({'version': list(sys.version_info[:2]), "
+                 "'prefix': sys.prefix, 'base_prefix': sys.base_prefix}))", capture=True)
+    try:
+        details = json.loads(output)
+        compatible = (
+            tuple(details["version"]) >= (3, 12)
+            and Path(details["prefix"]).resolve() == environment.resolve()
+            and details["prefix"] != details["base_prefix"]
+        )
+    except (ValueError, KeyError, TypeError) as exc:
+        raise SetupError(f"Python-Umgebung konnte nicht geprüft werden: {environment}") from exc
+    if not compatible:
+        raise SetupError(f"Die Umgebung benötigt Python >= 3.12 und einen eigenen venv-Prefix: {environment}")
+    return python
+
+
 def preflight(domain: str, port: int, static_root: Path, var_root: Path) -> None:
     """Reject existing installations and unverified host settings."""
     if sys.version_info < (3, 12):
@@ -207,7 +233,8 @@ def preflight(domain: str, port: int, static_root: Path, var_root: Path) -> None
             raise SetupError(f"{executable} fehlt; bitte auf dem U7-Host ausführen.")
     if any(name.startswith(("KI_CFG_", "KI_NEXT_")) or name in {"KI_STAGE", "KI_PROFILE"} for name in os.environ):
         raise SetupError("KI_CFG_*/KI_NEXT_*/KI_STAGE/KI_PROFILE vor der Einrichtung aus der Umgebung entfernen.")
-    for path in (ROOT / ".venv", ROOT / "ki.yaml", ROOT / "creds.yaml", var_root, static_root):
+    existing_environment()
+    for path in (ROOT / "ki.yaml", ROOT / "creds.yaml", var_root, static_root):
         if path.exists() or path.is_symlink():
             raise SetupError(f"Ersteinrichtung überschreibt keinen vorhandenen Pfad: {path}")
     for path in (ROOT / "config/runtime/runtime.yaml", ROOT / "config/stages/.active_stage",
@@ -235,14 +262,18 @@ def preflight(domain: str, port: int, static_root: Path, var_root: Path) -> None
 
 def install_packages() -> Path:
     """Create the project venv and install project and sibling checkouts."""
+    python = existing_environment()
+    if python is not None:
+        confirm(f"Vorhandene Python-Umgebung {ROOT / '.venv'} weiterverwenden und Pakete installieren/aktualisieren?")
     for directory, url in SIBLINGS.items():
         path = ROOT.parent / directory
         if not path.exists():
             run("git", "clone", "--", url, str(path))
         elif not (path / ".git").exists():
             raise SetupError(f"Vorhandener Geschwisterpfad ist kein Git-Checkout: {path}")
-    run(sys.executable, "-m", "venv", str(ROOT / ".venv"))
-    python = ROOT / ".venv/bin/python"
+    if python is None:
+        run(sys.executable, "-m", "venv", str(ROOT / ".venv"))
+        python = ROOT / ".venv/bin/python"
     packages = [item for name in SIBLINGS for item in ("-e", str(ROOT.parent / name))]
     run(str(python), "-m", "pip", "install", *packages, "-e", f"{ROOT}[deploy]")
     run(str(python), "-m", "pip", "check")

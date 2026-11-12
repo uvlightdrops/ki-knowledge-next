@@ -5,8 +5,8 @@ agent_project: ki-knowledge-next
 scope: deployment
 purpose: "Beschreibt die manuelle Next-Dienstvorlage für Supervisord und das explizite Webrouting auf U7."
 created: "2026-11-11 18"
-updated: "2026-11-12 17"
-update_reason: "Gespeicherte Eingabevorgaben beim erneuten Start des Setupskripts beschrieben"
+updated: "2026-11-12 18"
+update_reason: "Erkennung und bestätigte Weiterverwendung einer vorhandenen Python-Umgebung beschrieben"
 status: active
 relations:
   - target: README.md
@@ -48,7 +48,7 @@ Quellen, geprüft am 11. November 2026:
 ## Eingaben der Ersteinrichtung [setup-eingaben-u7]
 
 ```yaml block-meta
-updated: "2026-11-12 17"
+updated: "2026-11-12 18"
 status: active
 relations: []
 ```
@@ -68,9 +68,16 @@ zu einem sichtbaren Fehler statt zum stillen Verlust der Werte.
 
 Das ist eine Wiederverwendung von Eingaben, keine automatische Fortsetzung
 teilweise installierter Dienste. Sicherheitsprüfungen und Bestätigungen
-laufen erneut; vorhandene Installationsdateien werden weiterhin nicht
-überschrieben. Teilstände nach späteren Installationsfehlern müssen vor
+laufen erneut; vorhandene Konfigurationen, Zugangsdaten und Datenpfade
+werden weiterhin nicht überschrieben. Teilstände nach späteren Installationsfehlern müssen vor
 einem erneuten Einrichtungsversuch geprüft werden.
+
+Eine vorhandene lokale `.venv` wird erkannt und auf Python mindestens 3.12,
+einen passenden eigenen venv-Prefix und verfügbares pip geprüft.
+Nach ausdrücklicher Bestätigung wird sie weiterverwendet; die Installation
+kann dabei Pakete aktualisieren. Die Umgebung wird nicht neu erzeugt oder
+gelöscht. Ungültige Umgebungen und als Symlink eingebundene `.venv`-Verzeichnisse
+führen zu einem sichtbaren Abbruch. Fehlt `.venv`, wird sie wie bisher angelegt.
 
 ## Webdienst und Importworker [dienste-u7]
 

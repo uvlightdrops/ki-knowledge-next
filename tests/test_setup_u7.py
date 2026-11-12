@@ -10,6 +10,89 @@ from knext.config import APP, PROJECT_ROOT, load_config
 from scripts import setup_u7
 
 
+def environment_fixture(tmp_path, monkeypatch):
+    monkeypatch.setattr(setup_u7, "ROOT", tmp_path)
+    environment = tmp_path / ".venv"
+    (environment / "bin").mkdir(parents=True)
+    (environment / "pyvenv.cfg").write_text("home = /usr/bin\n")
+    (environment / "bin/python").touch()
+    return environment
+
+
+@pytest.mark.parametrize("reuse", [False, True])
+def test_install_creates_or_reuses_environment(tmp_path, monkeypatch, reuse):
+    monkeypatch.setattr(setup_u7, "ROOT", tmp_path)
+    if reuse:
+        environment_fixture(tmp_path, monkeypatch)
+    commands = []
+    confirmations = []
+    monkeypatch.setattr(setup_u7, "SIBLINGS", {})
+    monkeypatch.setattr(setup_u7, "confirm", confirmations.append)
+
+    def run(*command, capture=False):
+        commands.append(command)
+        if capture:
+            return json.dumps({"version": [3, 12], "prefix": str(tmp_path / ".venv"),
+                               "base_prefix": "/usr"})
+        return ""
+
+    monkeypatch.setattr(setup_u7, "run", run)
+    assert setup_u7.install_packages() == tmp_path / ".venv/bin/python"
+    assert any(command[1:3] == ("-m", "venv") for command in commands) is not reuse
+    assert bool(confirmations) is reuse
+    assert any(command[1:4] == ("-m", "pip", "install") for command in commands)
+    assert any(command[1:4] == ("-m", "pip", "check") for command in commands)
+
+
+@pytest.mark.parametrize("details", [
+    {"version": [3, 11], "prefix": "local", "base_prefix": "/usr"},
+    {"version": [3, 12], "prefix": "/usr", "base_prefix": "/usr"},
+    {"version": [3, 12], "prefix": "/elsewhere", "base_prefix": "/usr"},
+    {},
+])
+def test_incompatible_environment_is_not_modified(tmp_path, monkeypatch, details):
+    environment = environment_fixture(tmp_path, monkeypatch)
+    if details.get("prefix") == "local":
+        details["prefix"] = str(environment)
+    monkeypatch.setattr(setup_u7, "run", lambda *args, **kwargs: json.dumps(details))
+    with pytest.raises(setup_u7.SetupError):
+        setup_u7.existing_environment()
+    assert (environment / "pyvenv.cfg").read_text() == "home = /usr/bin\n"
+
+
+def test_reuse_requires_confirmation_before_installation(tmp_path, monkeypatch):
+    environment = environment_fixture(tmp_path, monkeypatch)
+    commands = []
+
+    def run(*command, capture=False):
+        commands.append(command)
+        return json.dumps({"version": [3, 12], "prefix": str(environment), "base_prefix": "/usr"})
+
+    def decline(message):
+        raise setup_u7.SetupError("Abgebrochen")
+
+    monkeypatch.setattr(setup_u7, "run", run)
+    monkeypatch.setattr(setup_u7, "confirm", decline)
+    with pytest.raises(setup_u7.SetupError, match="Abgebrochen"):
+        setup_u7.install_packages()
+    assert len(commands) == 1
+    assert commands[0][1] == "-I"
+
+
+@pytest.mark.parametrize("kind", ["file", "incomplete", "symlink"])
+def test_invalid_environment_paths_are_rejected(tmp_path, monkeypatch, kind):
+    monkeypatch.setattr(setup_u7, "ROOT", tmp_path)
+    environment = tmp_path / ".venv"
+    if kind == "file":
+        environment.touch()
+    elif kind == "symlink":
+        environment.symlink_to(tmp_path / "missing", target_is_directory=True)
+    else:
+        environment.mkdir()
+    with pytest.raises(setup_u7.SetupError, match="Keine gültige"):
+        setup_u7.existing_environment()
+
+
 def test_answers_survive_restart_as_editable_defaults(tmp_path, monkeypatch):
     monkeypatch.setattr(setup_u7, "ROOT", tmp_path)
     monkeypatch.setattr("builtins.input", lambda prompt: "example.org")
