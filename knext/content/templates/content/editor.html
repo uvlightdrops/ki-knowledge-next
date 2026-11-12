@@ -3,7 +3,8 @@
 <link rel="stylesheet" href="{% static 'content/editor.css' %}">
 <div class="editor-heading"><div><h1>{{ revision.title }}</h1>
 <p class="muted">{{ document.run.source.domain }} · {{ document.run.source.filename }}</p></div>
-<a href="{% url 'content:editor-index' %}" data-leave-editor>Anderen Text öffnen</a></div>
+<div class="editor-actions"><a href="{% url editor_other_route document.pk %}" data-leave-editor>{% if editor_wide %}Standardansicht{% else %}Breite Ansicht{% endif %}</a>
+<a href="{% url editor_list_route %}" data-leave-editor>Anderen Text öffnen</a></div></div>
 <div class="editor-toolbar" role="group" aria-label="Ansichten">
 <button type="button" id="toggle-network" aria-expanded="false" aria-controls="editor-network" hidden>Bubble-Netz</button>
 <button type="button" id="toggle-preview" aria-expanded="true" aria-controls="editor-preview" hidden>Vorschau</button>
@@ -19,13 +20,14 @@
 {% if revision.outline %}<p><a href="{% url 'content:collection' revision.outline.pk %}">Gespeicherte Gliederung und Ressourcen</a></p>{% endif %}
 </aside>
 <section class="panel editor-writing"><h2>Markdown</h2>
-<form method="post" id="editor-form" data-preview-url="{% url 'content:editor-preview' %}" data-restore-url="{% url 'content:editor-restore' document.pk %}">
+<form method="post" id="editor-form" data-preview-url="{% url 'content:editor-preview' %}" data-restore-url="{% url editor_restore_route document.pk %}">
+{% if editor_wide %}<input type="hidden" name="editor_variant" value="wide">{% endif %}
 {% csrf_token %}{{ form.expected }}{{ form.non_field_errors }}
 <label for="{{ form.title.id_for_label }}">Titel</label>{{ form.title }}{{ form.title.errors }}
 <label for="{{ form.body.id_for_label }}">Text</label>{{ form.body }}{{ form.body.errors }}
 <div class="editor-actions"><button type="submit">Speichern</button>
 <button type="button" id="refresh-preview" hidden>Vorschau aktualisieren</button>
-<a href="{% url 'content:editor' document.pk %}" data-leave-editor>Gespeicherten Stand laden</a></div>
+<a href="{% url editor_route document.pk %}" data-leave-editor>Gespeicherten Stand laden</a></div>
 <p class="muted">Speichern bewahrt frühere Fassungen. Rückgängig während der Eingabe: Strg+Z beziehungsweise ⌘Z.</p>
 {% if previous %}<details id="editor-backups"><summary>Sicherungen</summary>
 <p>Wiederherstellen bewahrt den aktuellen gespeicherten Stand und lässt die Freigabe unverändert.
@@ -34,7 +36,7 @@ Ungespeicherte Eingaben werden dabei verworfen.</p>
 <select name="number" id="backup-number">{% for backup in backups %}
 <option value="{{ backup.number }}">{{ backup.created_at|date:"d.m.Y H:i" }} · {{ backup.title }} · {{ backup.created_by }} · Stand {{ backup.number }}</option>
 {% endfor %}</select>
-<button type="submit" formaction="{% url 'content:editor-restore' document.pk %}" formnovalidate id="restore-backup">Gewählten Stand wiederherstellen</button>
+<button type="submit" formaction="{% url editor_restore_route document.pk %}" formnovalidate id="restore-backup">Gewählten Stand wiederherstellen</button>
 <p><a href="{% url 'content:revision' document.pk previous.number %}" data-leave-editor>Vorherigen Stand ansehen und vergleichen</a></p>
 </details>{% endif %}
 </form>
@@ -50,7 +52,7 @@ Ungespeicherte Eingaben werden dabei verworfen.</p>
 <div class="editor-actions"><button type="button" id="ai-use-selection">Textauswahl verwenden</button>
 <button type="button" id="ai-use-whole">Ganzen Text verwenden</button></div>
 <p id="ai-scope" role="status">Bitte eine Textstelle oder den ganzen Text wählen.</p>
-<label for="ai-original">Zieltext · Original</label><textarea id="ai-original" rows="8" readonly></textarea>
+<label for="ai-original">Zieltext · Original</label><textarea id="ai-original" rows="{% if editor_wide %}12{% else %}8{% endif %}" readonly wrap="soft"></textarea>
 <label for="ai-task">Vorlage</label>
 <select id="ai-task"><option value="">Eigener Auftrag</option>
 <option value="Korrigiere Rechtschreibung, Grammatik und Zeichensetzung. Erhalte Bedeutung und Gliederung.">Sprachlich korrigieren</option>

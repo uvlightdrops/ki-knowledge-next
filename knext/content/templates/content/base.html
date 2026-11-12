@@ -3,6 +3,6 @@
 <title>{% block title %}Import und Inhalte{% endblock %} · ki-knowledge next</title>
 <link rel="stylesheet" href="{% static 'content/workbench.css' %}"></head>
 <body>{% include "navigation.html" %}
-<main>
+<main class="{% block main_class %}{% endblock %}">
 {% for message in messages %}<p class="message{% if message.tags == 'error' %} error{% endif %}" role="{% if message.tags == 'error' %}alert{% else %}status{% endif %}">{{ message }}</p>{% endfor %}
 {% block content %}{% endblock %}</main></body></html>

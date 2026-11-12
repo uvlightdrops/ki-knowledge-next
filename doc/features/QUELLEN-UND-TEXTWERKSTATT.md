@@ -5,8 +5,8 @@ agent_project: ki-knowledge-next
 scope: features
 purpose: "Beschreibt die vorhandenen Arbeitswege von Quellenaufnahme bis Textbearbeitung, Wiederherstellung und Freigabe."
 created: "2026-11-11T04:56:00+01:00"
-updated: "2026-11-12 05"
-update_reason: "Kontextvorlage für semantische Gliederung zusätzlich zu den kompakten Textlisten beschrieben"
+updated: "2026-11-12 07"
+update_reason: "Lesbare Zeilenumbrüche und höhere Zieltext-Kontrollansicht beschrieben"
 status: active
 relations:
   - target: "../architecture/CONTENT-MODELL.md"
@@ -126,7 +126,7 @@ Die Batch-Auswahl unter `/content/sources/` reiht mehrere Quellen ein;
 ## Text bearbeiten [text-bearbeiten]
 
 ```yaml block-meta
-updated: "2026-11-12 00"
+updated: "2026-11-12 06"
 status: active
 relations:
 - target: ../architecture/ui/EDITOR-UND-KI.md#arbeitsraum
@@ -153,6 +153,18 @@ angezeigt statt dessen Arbeit zu überschreiben.
 Unter `/content/editor/` lässt sich ein Dokument für die neue Editoransicht
 wählen. „Editor · Entwurf“ ist vorläufig in der INTERN-Navigation verankert.
 Dokumentseiten und Werkstattübersicht verlinken ebenfalls auf den Editor.
+„Editor breit · Entwurf“ öffnet unter `/content/editor-wide/` eine eigene
+Textliste für die bildschirmbreite Variante. Beide Varianten bearbeiten
+dieselben Dokumente und Sicherungsstände. Im geöffneten Editor wechseln
+„Breite Ansicht“ und „Standardansicht“ zwischen ihnen; ungespeicherte
+Eingaben vor dem Wechsel speichern.
+
+Die breite Variante nutzt die gesamte verfügbare Bildschirmbreite.
+Ohne KI liegt die Vorschau ab 751 Pixeln rechts neben dem Markdown-Editor.
+Beim Öffnen der KI-Werkstatt nimmt diese den rechten Bereich ein;
+die Vorschau liegt dann direkt unter dem Editor in derselben Breite.
+Ab 1500 Pixeln erhält das Bubble-Netz eine eigene linke Spalte.
+Auf kleineren Fenstern stehen die Bereiche untereinander.
 
 Die Ansicht bietet Markdown-Textfeld und zuschaltbare Vorschau und
 Bubble-Navigation. „Vorschau aktualisieren“ rendert die aktuellen Eingaben
@@ -174,10 +186,34 @@ verfügbar; Bubble-Navigation und Eingabevorschau benötigen JavaScript.
 Die KI-Werkstatt ergänzt [prüfbare Textvorschläge](#ki-textvorschlaege).
 Der Attributeditor ist noch nicht angeschlossen.
 
-## KI-Textvorschläge [ki-textvorschlaege]
+## Editor kurz bedienen [editor-kurzanleitung]
 
 ```yaml block-meta
 updated: "2026-11-12 05"
+status: active
+relations:
+  - target: ../architecture/TEXTWERKSTATT-VERTRAG.md#editorvarianten
+    type: reference
+    reason: Gemeinsamer technischer Vertrag beider Editoransichten
+```
+
+1. Unter **INTERN → Editor breit · Entwurf** einen Text öffnen. Die
+   Spaltenfilter helfen beim Finden nach Titel, Domäne, Ordner oder Dateiname.
+2. Markdown bearbeiten und **Speichern** wählen. **Vorschau aktualisieren**
+   zeigt die Eingaben und erneuert die Bubble-Gliederung, ohne zu speichern.
+3. **Bubble-Netz**, **Vorschau** und **KI-Werkstatt** nach Bedarf zuschalten.
+   Eine Bubble markiert ihren Abschnitt im Text.
+4. Für KI zuerst Text markieren oder den ganzen Text wählen, einen Auftrag
+   eingeben und optional eine Kontextvorlage einfügen. **Vorschlag erstellen**,
+   Ergebnis prüfen und bearbeiten, dann **Übernehmen und speichern** oder
+   **Verwerfen**. Bei verändertem Ausgangstext ist die Übernahme gesperrt.
+5. Unter **Sicherungen** einen früheren Stand wiederherstellen. Speichern,
+   Wiederherstellen und KI-Übernahme lassen die Freigabe unverändert.
+
+## KI-Textvorschläge [ki-textvorschlaege]
+
+```yaml block-meta
+updated: "2026-11-12 07"
 status: active
 relations:
   - target: ../architecture/ui/EDITOR-UND-KI.md#ki-vorschlaege
@@ -201,6 +237,12 @@ Im Editor öffnet **KI-Werkstatt** den optionalen Bereich neben dem Text.
 „Textauswahl verwenden“ übernimmt die markierte Stelle, „Ganzen Text
 verwenden“ den vollständigen Body. Der tatsächlich gesendete Zieltext wird
 schreibgeschützt angezeigt. Provider und Modell sind sichtbar.
+Im breiten Editor erhält die KI-Spalte mehr Raum: Bei geöffneter Vorschau
+ist die Kontrollansicht auf großen Bildschirmen mindestens 50 Prozent
+breiter als in der früheren Anordnung mit separater Vorschauspalte.
+„Zieltext · Original“ ist dort zwölf statt acht Zeilen hoch.
+Lange Zeilen werden zur Anzeige umgebrochen, ohne seitliches Scrollen.
+Dies ändert nicht den gesendeten Text.
 
 Eine Vorlage hilft beim Korrigieren, klareren Formulieren, Zusammenfassen
 oder Weiterentwickeln; der Auftrag bleibt frei bearbeitbar. Zusätzliches
@@ -304,7 +346,7 @@ Speichern einer Struktur gibt ihre Inhalte nicht automatisch frei.
 ## Freigabe und Grenzen [freigabe-und-grenzen]
 
 ```yaml block-meta
-updated: "2026-11-11 21"
+updated: "2026-11-12 05"
 status: active
 relations:
 - target: ../architecture/QUELLEN-UND-TEXTWERKSTATT.md#grenzen-und-ausbau
@@ -319,7 +361,7 @@ weiterhin die freigegebene Fassung:
 [Import und Ausgabe](IMPORT-PIPELINES-AND-DRAFTS.md).
 
 Angemeldete Nutzer teilen derzeit den Bestand. Private Arbeitsbereiche,
-Domänenrechte, Annotationen, KI-Vorschläge und ein Attributeditor sind
+Domänenrechte, Annotationen und ein Attributeditor sind
 noch nicht angeschlossen. Die Anwendung bewahrt Originale und ältere
 Fassungen; sie ist kein manipulationssicheres Archiv.
 

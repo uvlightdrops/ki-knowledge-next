@@ -5,8 +5,8 @@ agent_project: ki-knowledge-next
 scope: features
 purpose: "Beschreibt die gemeinsame Haupt- und Unternavigation der Anwendung."
 created: "2026-11-11 15"
-updated: "2026-11-11 21"
-update_reason: "Vorläufigen Editor-Eintrag und seine Arbeitsrouten aufgenommen"
+updated: "2026-11-12 05"
+update_reason: "Breite Editorvariante als eigenen vorläufigen Einstieg ergänzt"
 status: active
 relations:
   - target: README.md
@@ -19,7 +19,7 @@ relations:
 ## Gruppierte Navigation [gruppierte-navigation]
 
 ```yaml block-meta
-updated: "2026-11-11 21"
+updated: "2026-11-12 05"
 status: active
 relations:
   - target: DOMAENEN.md#aktive-domaene
@@ -38,6 +38,8 @@ und die Unternavigation des aktuellen Bereichs:
 - **INTERN:** Werkstatt, Zusammenstellungen, Ressourcen, Beziehungstypen,
   Wissensnetz, Arbeitsraum und die Textwerkstatt-Demo. „Editor · Entwurf“
   öffnet vorläufig die Dokumentauswahl für die neue Editoransicht.
+  „Editor breit · Entwurf“ öffnet die eigene Auswahl für die
+  bildschirmbreite Variante; beide bearbeiten dieselben Inhalte.
   Zusammenstellungen,
   Ressourcen und Beziehungstypen behalten zusätzlich den Werkstattkontext.
 - **OUTPUT:** „Statische Ausgabe“ öffnet `/content/output/` mit den

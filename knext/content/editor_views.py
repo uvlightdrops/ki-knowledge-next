@@ -25,6 +25,10 @@ class EditorListView(DocumentListView):
     template_name = "content/editor_index.html"
 
 
+class WideEditorListView(EditorListView):
+    extra_context = {"editor_wide": True, "editor_route": "content:editor-wide"}
+
+
 def _outline(body: str) -> list[dict]:
     """Use the same heading boundaries as persisted content resources."""
     _, blocks = parse_outline(body)
@@ -35,7 +39,7 @@ def _outline(body: str) -> list[dict]:
     ]
 
 
-def _context(document: ContentDocument, form: RevisionForm | None = None, *, user=None) -> dict:
+def _context(document: ContentDocument, form: RevisionForm | None = None, *, user=None, wide=False) -> dict:
     revision = document.revisions.get(number=document.revision_number)
     previous = document.revisions.filter(number__lt=revision.number).select_related(
         "created_by",
@@ -52,7 +56,17 @@ def _context(document: ContentDocument, form: RevisionForm | None = None, *, use
         "previous": previous.first(),
         "ai": public_settings(),
         "ai_pending": _pending(document, user) if user is not None else None,
+        "editor_wide": wide,
+        "editor_route": "content:editor-wide" if wide else "content:editor",
+        "editor_list_route": "content:editor-wide-index" if wide else "content:editor-index",
+        "editor_restore_route": "content:editor-wide-restore" if wide else "content:editor-restore",
+        "editor_other_route": "content:editor" if wide else "content:editor-wide",
     }
+
+
+def _render_editor(request, document, form=None, *, wide=False, status=200):
+    template = "content/editor_wide.html" if wide else "content/editor.html"
+    return render(request, template, _context(document, form, user=request.user, wide=wide), status=status)
 
 
 def _pending(document: ContentDocument, user) -> dict | None:
@@ -71,7 +85,7 @@ def _pending(document: ContentDocument, user) -> dict | None:
 
 @login_required
 @require_http_methods(["GET", "POST"])
-def editor(request: HttpRequest, pk: UUID) -> HttpResponse:
+def editor(request: HttpRequest, pk: UUID, wide=False) -> HttpResponse:
     document = get_object_or_404(ContentDocument.objects.select_related(
         "run__source", "approved_revision",
     ).defer("run__source__data"), pk=pk)
@@ -83,15 +97,15 @@ def editor(request: HttpRequest, pk: UUID) -> HttpResponse:
                 revise(document, user=request.user, **form.cleaned_data)
             except (ImportFailure, ValidationError) as error:
                 form.add_error("body", str(error))
-                return render(request, "content/editor.html", _context(document, form, user=request.user), status=400)
+                return _render_editor(request, document, form, wide=wide, status=400)
             except RevisionConflict as error:
                 form.add_error(None, str(error))
                 document.refresh_from_db()
-                return render(request, "content/editor.html", _context(document, form, user=request.user), status=409)
+                return _render_editor(request, document, form, wide=wide, status=409)
             messages.success(request, "Arbeitsstand gespeichert. Frühere Stände bleiben als Sicherungen erhalten.")
-            return redirect("content:editor", pk=pk)
-        return render(request, "content/editor.html", _context(document, form, user=request.user), status=400)
-    return render(request, "content/editor.html", _context(document, user=request.user))
+            return redirect("content:editor-wide" if wide else "content:editor", pk=pk)
+        return _render_editor(request, document, form, wide=wide, status=400)
+    return _render_editor(request, document, wide=wide)
 
 
 @login_required
@@ -113,7 +127,7 @@ def preview(request: HttpRequest) -> JsonResponse:
 
 @login_required
 @require_POST
-def restore_backup(request: HttpRequest, pk: UUID) -> HttpResponse:
+def restore_backup(request: HttpRequest, pk: UUID, wide=False) -> HttpResponse:
     document = get_object_or_404(ContentDocument.objects.select_related(
         "run__source", "approved_revision",
     ).defer("run__source__data"), pk=pk)
@@ -121,16 +135,16 @@ def restore_backup(request: HttpRequest, pk: UUID) -> HttpResponse:
     backup = EditorRestoreForm(request.POST)
     if not backup.is_valid():
         form.add_error(None, "Ungültiger Wiederherstellungsauftrag. Bitte Arbeitsstand und Sicherung prüfen.")
-        return render(request, "content/editor.html", _context(document, form, user=request.user), status=400)
+        return _render_editor(request, document, form, wide=wide, status=400)
     try:
         restore(document, expected=backup.cleaned_data["expected"],
                 number=backup.cleaned_data["number"], user=request.user)
     except RevisionConflict as error:
         form.add_error(None, str(error))
         document.refresh_from_db()
-        return render(request, "content/editor.html", _context(document, form, user=request.user), status=409)
+        return _render_editor(request, document, form, wide=wide, status=409)
     except (ImportFailure, ValidationError) as error:
         form.add_error(None, str(error))
-        return render(request, "content/editor.html", _context(document, form, user=request.user), status=400)
+        return _render_editor(request, document, form, wide=wide, status=400)
     messages.success(request, "Sicherungsstand wiederhergestellt. Der bisherige Arbeitsstand bleibt erhalten.")
-    return redirect("content:editor", pk=pk)
+    return redirect("content:editor-wide" if wide else "content:editor", pk=pk)

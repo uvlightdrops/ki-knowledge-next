@@ -16,12 +16,12 @@
 </thead><tbody>
 {% for document in documents %}
 <tr>
-<td>{% if editor_list %}<a href="{% url 'content:editor' document.pk %}">{{ document.title }}</a>{% else %}<a href="{% url 'content:document' document.pk %}">{{ document.title }}</a> · <a href="{% url 'content:editor' document.pk %}">Editor</a>{% endif %}</td>
+<td>{% if editor_list %}<a href="{% url editor_route|default:'content:editor' document.pk %}">{{ document.title }}</a>{% else %}<a href="{% url 'content:document' document.pk %}">{{ document.title }}</a> · <a href="{% url 'content:editor' document.pk %}">Editor</a>{% endif %}</td>
 <td>{{ document.run.source.domain }}</td>
 <td>{{ document.source_folder|default:"—" }}</td>
 <td><a href="{% url 'content:source' document.run.source_id %}">{{ document.run.source.filename }}</a></td>
 <td><a href="{% url 'content:revision' document.pk document.revision_number %}">Revision {{ document.revision_number }}</a></td>
-<td>{% if document.approved_revision %}Revision {{ document.approved_revision.number }}{% else %}Nicht freigegeben{% endif %}</td>
+<td>{% if document.approved_revision %}Revision {{ document.approved_revision.number }}{% else %}Noch nicht freigegeben{% endif %}</td>
 </tr>
 {% empty %}<tr><td colspan="6">Keine passenden Dokumente. Im <a href="{% url 'content:inventory' %}">Quellbestand</a> Quellen erfassen und in Markdown umwandeln.</td></tr>{% endfor %}
 </tbody></table>

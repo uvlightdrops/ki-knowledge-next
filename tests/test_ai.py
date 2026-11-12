@@ -109,6 +109,31 @@ def test_accept_saves_edited_proposal_without_changing_approval(ai_environment):
     assert browser.post(result["accept_url"], {**payload(document), "text": "Doppelt"}).status_code == 409
 
 
+@pytest.mark.parametrize("variant,path", [("wide", "editor-wide"), ("unknown", "editor")])
+def test_ai_accept_returns_only_to_known_editor_variant(ai_environment, variant, path):
+    document, _, browser, _, _ = ai_environment
+    result = propose(ai_environment).json()
+    response = browser.post(result["accept_url"], {
+        **payload(document), "text": "Reviewed.", "editor_variant": variant,
+    })
+    assert response.status_code == 200
+    assert response.json()["url"] == f"/content/{path}/{document.pk}/"
+
+
+def test_wide_editor_reloads_same_pending_proposal_and_explicit_context(ai_environment):
+    document, _, browser, _, _ = ai_environment
+    result = propose(ai_environment, context="Mein Kontext").json()
+    page = BeautifulSoup(browser.get(f"/content/editor-wide/{document.pk}/").content, "html.parser")
+    assert page.select_one("main.editor-wide")
+    assert result["id"] in page.select_one("#editor-ai-pending").get_text()
+    assert "Mein Kontext" in page.select_one("#editor-ai-pending").get_text()
+    assert page.select_one("#ai-original")["wrap"] == "soft"
+    assert page.select_one("#ai-original")["rows"] == "12"
+    standard = BeautifulSoup(browser.get(f"/content/editor/{document.pk}/").content, "html.parser")
+    assert standard.select_one("#ai-original")["wrap"] == "soft"
+    assert standard.select_one("#ai-original")["rows"] == "8"
+
+
 def test_unsaved_buffer_is_backed_up_before_acceptance(ai_environment):
     document, _, browser, _, _ = ai_environment
     body = BODY + "\nUngespeicherte Gedanken."

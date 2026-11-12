@@ -17,6 +17,7 @@ GROUPS = (
     ("intern", "INTERN", (
         ("content:documents", "Werkstatt", {"content:documents", "content:document", "content:revision", "content:extraction", "content:restore", "content:approve", "content:download", "content:extraction-blocks"}, False),
         ("content:editor-index", "Editor · Entwurf", {"content:editor-index", "content:editor", "content:editor-restore", "content:editor-preview"}, False),
+        ("content:editor-wide-index", "Editor breit · Entwurf", {"content:editor-wide-index", "content:editor-wide", "content:editor-wide-restore"}, False),
         ("content:collections", "Zusammenstellungen", {"content:collections", "content:collection", "content:collection-edit", "content:collection-create"}, False),
         ("content:resources", "Ressourcen", {"content:resources", "content:resource", "content:folder-create"}, False),
         ("content:relation-types", "Beziehungstypen", {"content:relation-types", "content:relation-delete"}, False),

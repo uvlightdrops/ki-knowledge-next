@@ -1,6 +1,6 @@
-{% extends "content/base.html" %}{% block title %}Editor{% endblock %}
+{% extends "content/base.html" %}{% block title %}Editor{% if editor_wide %} breit{% endif %}{% endblock %}
 {% block content %}
-<h1>Editor</h1>
+<h1>Editor{% if editor_wide %} breit{% endif %}</h1>
 <p>Texte bearbeiten, das Bubble-Netz zuschalten und frühere Arbeitsstände wiederherstellen.</p>
 {% include "content/document_table.html" with editor_list=True %}
 {% endblock %}

@@ -5,8 +5,8 @@ agent_project: ki-knowledge-next
 scope: architecture
 purpose: "Bündelt die verbleibenden technischen Anschlussfragen des einfachen Editors und seiner KI-Vorschläge an Next."
 created: "2026-11-11 05"
-updated: "2026-11-12 00"
-update_reason: "KI-Textannahme als umgesetzt eingeordnet und verbleibende strukturierte Anschlüsse abgegrenzt"
+updated: "2026-11-12 07"
+update_reason: "Anzeigeumbruch und erhöhte Zieltext-Höhe im Variantenvertrag aktualisiert"
 status: draft
 relations:
   - target: README.md
@@ -75,7 +75,7 @@ Freigaben bleiben an konkrete gespeicherte Fassungen gebunden.
 ## Auswahl und KI-Annahme [markierungen-und-ki]
 
 ```yaml block-meta
-updated: "2026-11-12 00"
+updated: "2026-11-12 05"
 status: draft
 relations:
   - target: ../features/QUELLEN-UND-TEXTWERKSTATT.md#ki-textvorschlaege
@@ -100,6 +100,69 @@ Zeitlimit und eine Begrenzung pro Nutzer.
 
 Offen sind strukturierte Ergebnisse für Attribute und Blockaufteilung,
 feingranulare Teilannahme und Aufbewahrungsgrenzen für Aufträge.
+
+Die Generierung läuft synchron im Webprozess über `ki-core`; es gibt
+keinen separaten KI-Worker oder Streamingkanal. `TextProposal` bewahrt
+Ausgangspuffer, Auswahl, Auftrag, expliziten Kontext, Provider/Modell,
+Promptversion, Ergebnis und Annahmerevision. Statuswerte sind
+`generating`, `ready`, `failed`, `accepted` und `discarded`. Bei Annahme
+wird auch der vom Nutzer bearbeitete Ersatztext gespeichert.
+
+Generieren, Annehmen und Verwerfen verwenden angemeldete, CSRF-geschützte
+POST-Aufrufe. Nur der Ersteller darf seinen Vorschlag annehmen oder
+verwerfen. Antworten liefern JSON; Ausgangskonflikte ergeben HTTP 409,
+ungültige Eingaben HTTP 400, zurückgewiesene Generierungen HTTP 422
+und ungültige Providerkonfiguration HTTP 503. Providerfehlertexte werden
+redigiert; das Log nennt Vorschlags-ID und Fehlerklasse.
+
+Der Editor lädt den jüngsten eigenen offenen Vorschlag erneut. Nach einem
+Browserabbruch kann der synchrone Provideraufruf weiterlaufen; vor einer
+Wiederholung zuerst diesen Stand prüfen. Es gibt noch keine automatische
+Bereinigung verwaister `generating`-Aufträge oder Aufbewahrungsfrist.
+Das Minutenlimit ist eine DB-Zählprüfung, keine strikte Sperre gegen
+gleichzeitige Generierungen. Größen- und Zeitgrenzen stehen in der
+[KI-Konfiguration](../features/KONFIGURATION-UND-START.md#ki-konfiguration).
+
+## Gemeinsame Editorvarianten [editorvarianten]
+
+```yaml block-meta
+updated: "2026-11-12 07"
+status: active
+relations:
+  - target: ../features/QUELLEN-UND-TEXTWERKSTATT.md#editor-kurzanleitung
+    type: reference
+    reason: Kurze Bedienung der beiden Ansichten
+  - target: ui/EDITOR-UND-KI.md#seitenentwuerfe
+    type: reference
+    reason: Erprobung eigener Oberflächen ohne zweite Inhaltsspeicherung
+  - target: ui/EDITOR-UND-KI.md#layout-presets
+    type: reference
+    reason: Bewerteter Erweiterungsvertrag für Presets und Widgetkit-Adapter
+```
+
+`/content/editor/` und `/content/editor-wide/` haben eigene Textlisten,
+Dokument- und Wiederherstellungsrouten. Die breite Vorlage
+`editor_wide.html` erbt die gemeinsame Editorvorlage. Views, Formulare,
+JavaScript, Auswahlanker, Vorschläge und Revisionsdienste bleiben geteilt.
+Die breite CSS-Klasse hebt die Maximalbreite des Seiteninhalts auf.
+Benannte Grid-Areas halten die Vorschau ohne KI ab 751 Pixeln rechts
+neben dem Editor. Mit KI liegt sie unter ihm in derselben Spalte;
+die KI steht rechts über beide Zeilen, das Netz ab 1500 Pixeln links.
+Die offenen Hauptspalten verwenden die Gewichte Editor `1.3`, KI `1.65`
+und optional Netz `0.7`. Unter 751 Pixeln stehen alle Bereiche in einer
+Spalte. Die breite Kontrolltextarea zeigt zwölf statt acht Zeilen und
+hat eine entsprechend erhöhte Maximalhöhe von `37.5vh` statt `25vh`.
+`wrap="soft"` und CSS-Anzeigeumbrüche erhalten ihren Wert und die
+Codepoint-Auswahl; horizontales Scrollen ist deaktiviert.
+
+Speichern, Validierungs-/Konfliktantworten und Wiederherstellen behalten
+die aufgerufene Variante bei. KI-Annahme verwendet das versteckte Feld
+`editor_variant=wide` ausschließlich zur Wahl einer der beiden festen
+Rückkehrrouten; eine freie Redirect-URL ist nicht zulässig.
+Ein Variantenwechsel lädt die gemeinsame gespeicherte Fassung und den
+letzten eigenen offenen Vorschlag. Ungespeicherte Browserpuffer werden
+nicht zwischen Seiten übertragen; die bestehende Verlassenswarnung gilt.
+Es gibt weder eine neue DB-Migration noch eine separate Freigabe.
 
 ## Anschluss und Abnahme [anschluss-und-abnahme]
 

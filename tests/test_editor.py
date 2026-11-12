@@ -44,6 +44,63 @@ def test_editor_landing_navigation_and_empty_state(browser, document):
     assert "Keine passenden Dokumente" in response.content.decode()
 
 
+def test_wide_editor_reuses_document_widgets_with_separate_navigation_and_routes(browser, document):
+    wide_url = reverse("content:editor-wide", args=[document.pk])
+    index = BeautifulSoup(browser.get(reverse("content:editor-wide-index")).content, "html.parser")
+    assert index.select_one(f'a[href="{wide_url}"]')
+    page = BeautifulSoup(browser.get(wide_url).content, "html.parser")
+    assert page.select_one("main.editor-wide")
+    assert page.select_one(".knext-secondary [aria-current]").get_text() == "Editor breit · Entwurf"
+    assert page.select_one("#id_body").get_text().removeprefix("\n") == BODY
+    assert page.select_one(".editor-writing")
+    assert all(page.select_one(f"#{widget}") for widget in [
+        "editor-network", "editor-preview", "editor-ai",
+    ])
+    form = page.select_one("#editor-form")
+    assert form["data-restore-url"] == reverse("content:editor-wide-restore", args=[document.pk])
+    assert form.select_one('input[name="editor_variant"]')["value"] == "wide"
+    assert page.select_one(f'a[href="{reverse("content:editor", args=[document.pk])}"][data-leave-editor]')
+    standard = BeautifulSoup(browser.get(reverse("content:editor", args=[document.pk])).content, "html.parser")
+    assert not standard.select_one("main.editor-wide")
+    assert standard.select_one(f'a[href="{wide_url}"][data-leave-editor]')
+
+
+def test_wide_editor_save_and_restore_return_to_wide_variant(browser, document):
+    url = reverse("content:editor-wide", args=[document.pk])
+    response = browser.post(url, payload(document, body=BODY + "\nChanged."))
+    assert response.status_code == 302 and response.url == url
+    document.refresh_from_db()
+    page = BeautifulSoup(browser.get(url).content, "html.parser")
+    restore_url = reverse("content:editor-wide-restore", args=[document.pk])
+    assert page.select_one("#restore-backup")["formaction"] == restore_url
+    response = browser.post(restore_url, payload(document, number=1))
+    assert response.status_code == 302 and response.url == url
+    document.refresh_from_db()
+    assert document.revisions.get(number=3).body == BODY
+
+
+@pytest.mark.parametrize("action", ["editor-wide", "editor-wide-restore"])
+def test_wide_editor_conflicts_preserve_variant_and_unsaved_buffer(browser, document, action):
+    user = User.objects.get(username="editor")
+    revise(document, expected=1, title="Two", body=BODY + "Two", user=user)
+    revise(document, expected=2, title="Three", body=BODY + "Three", user=user)
+    response = browser.post(reverse(f"content:{action}", args=[document.pk]),
+                            payload(document, expected=2, body="My buffer", number=1))
+    assert response.status_code == 409
+    page = BeautifulSoup(response.content, "html.parser")
+    assert page.select_one("main.editor-wide")
+    assert page.select_one("#id_body").get_text().removeprefix("\n") == "My buffer"
+    assert page.select_one('input[name="expected"]')["value"] == "2"
+
+
+def test_wide_editor_requires_login_and_renders_invalid_forms_in_place(browser, document):
+    url = reverse("content:editor-wide", args=[document.pk])
+    assert Client().get(url).status_code == 302
+    response = browser.post(url, payload(document, body=""))
+    assert response.status_code == 400
+    assert BeautifulSoup(response.content, "html.parser").select_one("main.editor-wide")
+
+
 def test_editor_shows_source_text_safe_preview_and_optional_network(browser, document):
     count = ContentRevision.objects.count()
     response = browser.get(reverse("content:editor", args=[document.pk]))

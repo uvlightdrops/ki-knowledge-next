@@ -61,7 +61,8 @@ def accept_proposal(request, pk):
         return JsonResponse({"error": str(error)}, status=409)
     except (ImportFailure, ValidationError) as error:
         return JsonResponse({"error": str(error)}, status=400)
-    return JsonResponse({"url": reverse("content:editor", args=[proposal.document_id])})
+    editor_route = "content:editor-wide" if request.POST.get("editor_variant") == "wide" else "content:editor"
+    return JsonResponse({"url": reverse(editor_route, args=[proposal.document_id])})
 
 
 @login_required

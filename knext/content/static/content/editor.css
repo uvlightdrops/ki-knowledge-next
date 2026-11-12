@@ -31,3 +31,34 @@
 @media(max-width:1150px){.editor-layout.network-open{grid-template-columns:minmax(15rem,.7fr) minmax(0,1.3fr)}.network-open #editor-preview{grid-column:1/-1}}
 @media(max-width:750px){.editor-layout,.editor-layout.network-open,.editor-layout.preview-closed,.editor-layout.network-open.preview-closed{grid-template-columns:minmax(0,1fr)}.editor-writing textarea{min-height:45vh}}
 @media(max-width:750px){.editor-layout.ai-open{grid-template-columns:minmax(0,1fr)}.ai-open #editor-ai{grid-column:auto;grid-row:auto}}
+.editor-wide{max-width:none;width:100%}
+.editor-wide #ai-original{white-space:pre-wrap;overflow-wrap:anywhere;overflow-x:hidden;max-height:37.5vh}
+.editor-wide #editor-layout{grid-template-columns:var(--wide-columns)}
+.editor-wide .editor-layout{--wide-columns:minmax(0,1fr);grid-template-areas:"writing" "preview"}
+.editor-wide .editor-layout.network-open{grid-template-areas:"network" "writing" "preview"}
+.editor-wide .editor-layout.preview-closed{grid-template-areas:"writing"}
+.editor-wide .editor-layout.network-open.preview-closed{grid-template-areas:"network" "writing"}
+.editor-wide .editor-layout.ai-open{grid-template-areas:"writing" "preview" "ai"}
+.editor-wide .editor-layout.ai-open.network-open{grid-template-areas:"network" "writing" "preview" "ai"}
+.editor-wide .editor-layout.ai-open.preview-closed{grid-template-areas:"writing" "ai"}
+.editor-wide .editor-layout.ai-open.network-open.preview-closed{grid-template-areas:"network" "writing" "ai"}
+.editor-wide .editor-layout .editor-writing{grid-area:writing}
+.editor-wide .editor-layout #editor-network{grid-area:network}
+.editor-wide .editor-layout #editor-preview{grid-area:preview}
+.editor-wide .editor-layout #editor-ai{grid-area:ai}
+@media(min-width:751px){
+.editor-wide .editor-layout{--wide-columns:minmax(0,1.3fr) minmax(0,1fr);grid-template-areas:"writing preview"}
+.editor-wide .editor-layout.network-open{grid-template-areas:"network network" "writing preview"}
+.editor-wide .editor-layout.preview-closed{--wide-columns:minmax(0,1fr);grid-template-areas:"writing"}
+.editor-wide .editor-layout.network-open.preview-closed{grid-template-areas:"network" "writing"}
+.editor-wide .editor-layout.ai-open{--wide-columns:minmax(0,1.3fr) minmax(0,1.65fr);grid-template-areas:"writing ai" "preview ai"}
+.editor-wide .editor-layout.ai-open.network-open{grid-template-areas:"network network" "writing ai" "preview ai"}
+.editor-wide .editor-layout.ai-open.preview-closed{grid-template-areas:"writing ai"}
+.editor-wide .editor-layout.ai-open.network-open.preview-closed{grid-template-areas:"network network" "writing ai"}
+}
+@media(min-width:1500px){
+.editor-wide .editor-layout.network-open{--wide-columns:minmax(0,.7fr) minmax(0,1.3fr) minmax(0,1fr);grid-template-areas:"network writing preview"}
+.editor-wide .editor-layout.network-open.preview-closed{--wide-columns:minmax(0,.7fr) minmax(0,1.3fr);grid-template-areas:"network writing"}
+.editor-wide .editor-layout.ai-open.network-open{--wide-columns:minmax(0,.7fr) minmax(0,1.3fr) minmax(0,1.65fr);grid-template-areas:"network writing ai" "network preview ai"}
+.editor-wide .editor-layout.ai-open.network-open.preview-closed{grid-template-areas:"network writing ai"}
+}
