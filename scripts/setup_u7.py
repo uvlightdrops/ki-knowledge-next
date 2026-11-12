@@ -14,7 +14,9 @@ import socket
 import ssl
 import subprocess
 import sys
+import tempfile
 import threading
+from collections.abc import Callable
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -30,6 +32,62 @@ SIBLINGS = {
 
 class SetupError(Exception):
     """The installation cannot safely proceed."""
+
+
+class SetupAnswers:
+    """Keep non-secret answers as editable defaults across setup attempts."""
+
+    def __init__(self) -> None:
+        self.path = ROOT / ".setup-u7-answers.json"
+        self.values: dict[str, str] = {}
+        if self.path.exists():
+            saved = json.loads(self.path.read_text(encoding="utf-8"))
+            keys = {"domain", "port", "workspace", "data"}
+            if not isinstance(saved, dict) or set(saved) - keys or any(
+                not isinstance(value, str) for value in saved.values()
+            ):
+                raise SetupError(f"Ungültige Eingabedatei: {self.path}")
+            self.values = saved
+            print(f"Gespeicherte Eingaben als Vorgaben geladen: {self.path}")
+
+    def ask(self, key: str, label: str, default: str,
+            validate: Callable[[str], str]) -> str:
+        """Validate and persist each answer before the next setup step."""
+        default = self.values.get(key, default)
+        while True:
+            hint = f" [{default}]" if default else ""
+            value = input(f"{label}{hint}: ").strip() or default
+            try:
+                value = validate(value)
+            except (SetupError, ValueError) as exc:
+                print(f"Ungültige Eingabe: {exc}", file=sys.stderr)
+                continue
+            self.values[key] = value
+            self.save()
+            return value
+
+    def save(self) -> None:
+        """Atomically replace the private answer file, never credentials."""
+        temporary: Path | None = None
+        try:
+            with tempfile.NamedTemporaryFile(
+                mode="w", encoding="utf-8", dir=ROOT,
+                prefix=".setup-u7-answers.", suffix=".tmp", delete=False,
+            ) as stream:
+                temporary = Path(stream.name)
+                json.dump(self.values, stream, ensure_ascii=False, indent=2)
+            os.replace(temporary, self.path)
+        finally:
+            if temporary is not None:
+                temporary.unlink(missing_ok=True)
+
+
+def web_port(value: str) -> str:
+    """Validate the private web port before remembering it."""
+    port = int(value)
+    if not 1024 <= port <= 65535:
+        raise SetupError("Webport muss zwischen 1024 und 65535 liegen.")
+    return str(port)
 
 
 def run(*command: str, capture: bool = False) -> str:
@@ -268,10 +326,9 @@ def main() -> int:
     """Run the interactive first installation."""
     os.umask(0o077)
     try:
-        domain = domain_name(input("Bereits eingerichtete eigene U7-Domain: "))
-        port = int(input("Privater Webport [8780]: ").strip() or "8780")
-        if not 1024 <= port <= 65535:
-            raise SetupError("Webport muss zwischen 1024 und 65535 liegen.")
+        answers = SetupAnswers()
+        domain = answers.ask("domain", "Bereits eingerichtete eigene U7-Domain", "", domain_name)
+        port = int(answers.ask("port", "Privater Webport", "8780", web_port))
         account = getpass.getuser()
         public_base = Path("/var/www/virtual") / account
         document_root = public_base / domain
@@ -279,8 +336,12 @@ def main() -> int:
             raise SetupError(f"Domain-DocumentRoot fehlt oder zeigt nach außen: {document_root}")
         static_root = document_root / "static"
         var_root = Path.home() / "ki/var/ki-knowledge-next"
-        workspace = private_directory("Wiki-Arbeitsverzeichnis", Path.home() / "ki/wiki")
-        data = private_directory("Datenverzeichnis", Path.home() / "ki/data")
+        workspace = Path(answers.ask(
+            "workspace", "Wiki-Arbeitsverzeichnis", str(Path.home() / "ki/wiki"), private_path,
+        ))
+        data = Path(answers.ask(
+            "data", "Datenverzeichnis", str(Path.home() / "ki/data"), private_path,
+        ))
         preflight(domain, port, static_root, var_root)
         for directory in (workspace, data):
             if not directory.exists():
@@ -299,21 +360,24 @@ def main() -> int:
         run(str(python), "manage.py", "createsuperuser")
         activate(python, domain, port)
         return 0
+    except (KeyboardInterrupt, EOFError):
+        print("\nU7-Einrichtung abgebrochen; gültige Eingaben bleiben gespeichert.", file=sys.stderr)
+        return 1
     except (SetupError, OSError, ValueError, http.client.HTTPException, ssl.SSLError) as exc:
         print(f"U7-Einrichtung fehlgeschlagen: {exc}", file=sys.stderr)
         print("Vorhandene Teilstände prüfen; kein automatischer Rollback.", file=sys.stderr)
+        print("Gespeicherte Eingaben werden beim nächsten Start als Vorgaben angeboten.", file=sys.stderr)
         return 1
 
 
-def private_directory(label: str, default: Path) -> Path:
-    """Choose a private data root without silently replacing existing content."""
-    value = input(f"{label} [{default}]: ").strip()
-    path = Path(value).expanduser() if value else default
+def private_path(value: str) -> str:
+    """Validate a private data root without replacing existing content."""
+    path = Path(value).expanduser()
     if not path.is_absolute() or not path.resolve().is_relative_to(Path.home().resolve()):
-        raise SetupError(f"{label} muss ein absoluter Pfad innerhalb des Home-Verzeichnisses sein.")
+        raise SetupError("Ein absoluter Pfad innerhalb des Home-Verzeichnisses ist erforderlich.")
     if path.exists() and not path.is_dir():
-        raise SetupError(f"{label} ist kein Verzeichnis: {path}")
-    return path
+        raise SetupError(f"Kein Verzeichnis: {path}")
+    return str(path)
 
 
 if __name__ == "__main__":

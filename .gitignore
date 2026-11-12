@@ -14,3 +14,4 @@ config/profiles/.active_profile
 .env.*
 !.env.example
 .idea/
+.setup-u7-answers.*

@@ -5,8 +5,8 @@ agent_project: ki-knowledge-next
 scope: deployment
 purpose: "Beschreibt die manuelle Next-Dienstvorlage für Supervisord und das explizite Webrouting auf U7."
 created: "2026-11-11 18"
-updated: "2026-11-11 20"
-update_reason: "Hostvorlage mit offener Produktionsintegration verbunden"
+updated: "2026-11-12 17"
+update_reason: "Gespeicherte Eingabevorgaben beim erneuten Start des Setupskripts beschrieben"
 status: active
 relations:
   - target: README.md
@@ -44,6 +44,33 @@ Quellen, geprüft am 11. November 2026:
 [Python](https://manual.uberspace.de/lang-python/),
 [Supervisord](https://manual.uberspace.de/daemons-supervisord/) und
 [Webbackends](https://manual.uberspace.de/web-backends/).
+
+## Eingaben der Ersteinrichtung [setup-eingaben-u7]
+
+```yaml block-meta
+updated: "2026-11-12 17"
+status: active
+relations: []
+```
+
+`python3.12 scripts/setup_u7.py` merkt jede gültige Eingabe unmittelbar
+in `.setup-u7-answers.json` im Projektcheckout: Domain, Port, Wiki- und
+Datenverzeichnis. Nach einem Fehler oder Abbruch mit Strg+C werden bereits
+erfasste Werte beim nächsten Aufruf in eckigen Klammern angeboten.
+Enter übernimmt den Wert; eine neue Eingabe ersetzt ihn. Ungültige Eingaben
+werden direkt erneut abgefragt.
+
+Die Datei wird atomar mit privaten Zugriffsrechten (`0600`) geschrieben
+und von Git ignoriert. Sie enthält keine Passwörter, Django-Schlüssel
+oder Bestätigungen für Hoständerungen. Zum Verwerfen der Vorgaben kann
+die Datei gezielt gelöscht werden. Eine beschädigte Eingabedatei führt
+zu einem sichtbaren Fehler statt zum stillen Verlust der Werte.
+
+Das ist eine Wiederverwendung von Eingaben, keine automatische Fortsetzung
+teilweise installierter Dienste. Sicherheitsprüfungen und Bestätigungen
+laufen erneut; vorhandene Installationsdateien werden weiterhin nicht
+überschrieben. Teilstände nach späteren Installationsfehlern müssen vor
+einem erneuten Einrichtungsversuch geprüft werden.
 
 ## Webdienst und Importworker [dienste-u7]
 

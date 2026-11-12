@@ -10,6 +10,96 @@ from knext.config import APP, PROJECT_ROOT, load_config
 from scripts import setup_u7
 
 
+def test_answers_survive_restart_as_editable_defaults(tmp_path, monkeypatch):
+    monkeypatch.setattr(setup_u7, "ROOT", tmp_path)
+    monkeypatch.setattr("builtins.input", lambda prompt: "example.org")
+    answers = setup_u7.SetupAnswers()
+    assert answers.ask("domain", "Domain", "", setup_u7.domain_name) == "example.org"
+    assert answers.path.stat().st_mode & 0o777 == 0o600
+    prompts = []
+    monkeypatch.setattr("builtins.input", lambda prompt: prompts.append(prompt) or "")
+    restarted = setup_u7.SetupAnswers()
+    assert restarted.ask("domain", "Domain", "", setup_u7.domain_name) == "example.org"
+    assert "[example.org]" in prompts[0]
+    monkeypatch.setattr("builtins.input", lambda prompt: "new.example.org")
+    assert restarted.ask("domain", "Domain", "", setup_u7.domain_name) == "new.example.org"
+    assert setup_u7.SetupAnswers().values == {"domain": "new.example.org"}
+
+
+def test_invalid_answer_retries_without_losing_saved_answers(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(setup_u7, "ROOT", tmp_path)
+    replies = iter(["example.org", "invalid", "80", "9000"])
+    monkeypatch.setattr("builtins.input", lambda prompt: next(replies))
+    answers = setup_u7.SetupAnswers()
+    answers.ask("domain", "Domain", "", setup_u7.domain_name)
+    assert answers.ask("port", "Port", "8780", setup_u7.web_port) == "9000"
+    assert setup_u7.SetupAnswers().values == {"domain": "example.org", "port": "9000"}
+    assert "Ungültige Eingabe" in capsys.readouterr().err
+    assert not list(tmp_path.glob("*.tmp"))
+
+
+@pytest.mark.parametrize("contents", ['{"password": "no"}', '[]', '{"domain": 42}', '{'])
+def test_invalid_answer_file_is_not_silently_discarded(tmp_path, monkeypatch, contents):
+    monkeypatch.setattr(setup_u7, "ROOT", tmp_path)
+    path = tmp_path / ".setup-u7-answers.json"
+    path.write_text(contents)
+    with pytest.raises((setup_u7.SetupError, ValueError)):
+        setup_u7.SetupAnswers()
+    assert path.read_text() == contents
+
+
+def test_interrupt_keeps_previously_confirmed_answers(tmp_path, monkeypatch):
+    monkeypatch.setattr(setup_u7, "ROOT", tmp_path)
+    replies = iter(["example.org"])
+
+    def answer(prompt):
+        try:
+            return next(replies)
+        except StopIteration:
+            raise KeyboardInterrupt
+
+    monkeypatch.setattr("builtins.input", answer)
+    previous_umask = os.umask(0o077)
+    try:
+        assert setup_u7.main() == 1
+    finally:
+        os.umask(previous_umask)
+    assert setup_u7.SetupAnswers().values == {"domain": "example.org"}
+
+
+def test_directory_answers_are_revalidated_on_restart(tmp_path, monkeypatch):
+    monkeypatch.setattr(setup_u7, "ROOT", tmp_path)
+    monkeypatch.setattr(setup_u7.Path, "home", lambda: tmp_path)
+    monkeypatch.setattr("builtins.input", lambda prompt: "")
+    answers = setup_u7.SetupAnswers()
+    for key in ("workspace", "data"):
+        assert answers.ask(key, key, str(tmp_path / key), setup_u7.private_path) == str(tmp_path / key)
+    (tmp_path / "workspace").write_text("not a directory")
+    replies = iter(["", str(tmp_path / "other")])
+    monkeypatch.setattr("builtins.input", lambda prompt: next(replies))
+    restarted = setup_u7.SetupAnswers()
+    assert restarted.ask("workspace", "Wiki", "", setup_u7.private_path) == str(tmp_path / "other")
+    assert restarted.values["data"] == str(tmp_path / "data")
+
+
+def test_failed_answer_save_preserves_previous_file(tmp_path, monkeypatch):
+    monkeypatch.setattr(setup_u7, "ROOT", tmp_path)
+    monkeypatch.setattr("builtins.input", lambda prompt: "example.org")
+    answers = setup_u7.SetupAnswers()
+    answers.ask("domain", "Domain", "", setup_u7.domain_name)
+    previous = answers.path.read_text()
+
+    def fail_replace(source, destination):
+        raise OSError("disk unavailable")
+
+    monkeypatch.setattr(setup_u7.os, "replace", fail_replace)
+    monkeypatch.setattr("builtins.input", lambda prompt: "other.example.org")
+    with pytest.raises(OSError, match="disk unavailable"):
+        answers.ask("domain", "Domain", "", setup_u7.domain_name)
+    assert answers.path.read_text() == previous
+    assert not list(tmp_path.glob("*.tmp"))
+
+
 @pytest.mark.parametrize("name", ["", "*.example.org", "https://example.org", "example.org/path",
                                   "example.org:443", "-invalid.example", "a..example"])
 def test_domain_rejects_non_host_names(name):
