@@ -1,0 +1,18 @@
+apps:
+  ki_knowledge_next:
+    django:
+      debug: false
+      https_proxy: true
+stack:
+  target: supervisord
+  services:
+    django:
+      host: "0.0.0.0"
+      command: ["{python}", "-m", "gunicorn", "knext.wsgi:application", "--bind", "{host}:{port}", "--workers", "1", "--threads", "2", "--timeout", "120"]
+      marker: gunicorn knext.wsgi:application
+      env:
+        KI_STAGE: uberspace7
+    import-worker:
+      stop_timeout: 300
+      env:
+        KI_STAGE: uberspace7

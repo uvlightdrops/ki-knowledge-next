@@ -5,8 +5,8 @@ agent_project: ki-knowledge-next
 scope: deployment
 purpose: "Trennt den vorhandenen Betriebsanschluss von offenen Produktions-, Automatisierungs- und Abnahmeentscheidungen."
 created: "2026-11-10T20:55:00+01:00"
-updated: "2026-11-11 23"
-update_reason: "Eigenständige lokale Web- und Worker-Dienste im Stackvertrag eingeordnet"
+updated: "2026-11-12 21"
+update_reason: "Implementierte U7-Stage von verbleibender U8-Integration und Hostabnahme getrennt"
 status: draft
 relations:
   - target: README.md
@@ -55,7 +55,7 @@ Appdeployment sind getrennte Aufträge.
 ## Produktionsstart und Zielhostprofile [produktionsintegration]
 
 ```yaml block-meta
-updated: "2026-11-11 20"
+updated: "2026-11-12 21"
 status: draft
 relations:
   - target: BETRIEB.md#produktionsvoraussetzungen
@@ -69,10 +69,12 @@ relations:
     reason: Systemd-User-Ziel
 ```
 
-Offen sind die deklarierte Gunicorn-Abhängigkeit, geprüfte HTTPS-/Proxy-
-und Cookie-Einstellungen sowie Next-spezifische U7-/U8-Stages. Die
-Dienstvorlagen sind die Grundlage; Aktivierung und Webrouting bleiben
-ausdrücklich bestätigte Betreiberaktionen.
+Gunicorn ist als Deploymentabhängigkeit deklariert. HTTPS-/Proxy- und
+Cookie-Einstellungen sind implementiert; ihre Verwendung setzt den
+geprüften Proxyvertrag des Zielhosts voraus. Die Next-Stage `uberspace7`
+bindet Web und Worker an Supervisord und wird vom U7-Setup aktiviert.
+Offen bleiben die U8-Stage und die praktische Zielhostabnahme.
+Aktivierung und Webrouting bleiben ausdrücklich bestätigte Betreiberaktionen.
 
 Zielprofile müssen Web und Worker, private Pfade, Staticfiles und
 Hostvoraussetzungen gemeinsam prüfen. Der bisherige

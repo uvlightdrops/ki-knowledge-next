@@ -46,6 +46,40 @@ def test_defaults_preserve_local_settings(config_root):
     assert config["http"]["request_timeout"] == 30
 
 
+@pytest.mark.parametrize("selection", ["environment", "marker"])
+def test_uberspace7_stage_preserves_private_host_values(config_root, monkeypatch, selection):
+    stages = config_root / "config/stages"
+    stages.mkdir()
+    shutil.copyfile(PROJECT_ROOT / "config/stages/uberspace7.yaml", stages / "uberspace7.yaml")
+    write_layer(config_root, "ki.yaml", {
+        "apps": {APP: {"django": {"allowed_hosts": ["example.org"]},
+                       "paths": {"workspace": "/home/example/wiki"}}},
+        "stack": {"services": {"django": {"port": 9123}}},
+    })
+    write_layer(config_root, "creds.yaml", app_value("secret_key", "synthetic-private"))
+    if selection == "environment":
+        monkeypatch.setenv("KI_STAGE", "uberspace7")
+    else:
+        (stages / ".active_stage").write_text("uberspace7\n")
+    config = load_config(config_root)
+    django = config["apps"][APP]["django"]
+    assert django["debug"] is False and django["https_proxy"] is True
+    assert django["allowed_hosts"] == ["example.org"]
+    assert django["secret_key"] == "synthetic-private"
+    assert config["apps"][APP]["paths"]["workspace"] == "/home/example/wiki"
+    assert config["stack"]["target"] == "supervisord"
+    web = config["stack"]["services"]["django"]
+    assert web["host"] == "0.0.0.0" and web["port"] == 9123
+    assert "gunicorn" in web["command"]
+    assert web["marker"] == "gunicorn knext.wsgi:application"
+    assert config["stack"]["services"]["import-worker"]["stop_timeout"] == 300
+    assert all(service["env"]["KI_STAGE"] == "uberspace7"
+               for service in config["stack"]["services"].values())
+    monkeypatch.delenv("KI_STAGE", raising=False)
+    (stages / ".active_stage").unlink(missing_ok=True)
+    assert load_config(config_root)["stack"]["services"]["django"]["host"] == "127.0.0.1"
+
+
 def test_ai_config_uses_shared_schema_and_local_credentials(config_root):
     write_layer(config_root, "ki.yaml", {
         "apps": {APP: {"ai": {"enabled": True}}},

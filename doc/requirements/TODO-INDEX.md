@@ -160,7 +160,8 @@ Proxyvertrag prüfen. [Entwurf](../deployment/ENTWURF.md#produktionsintegration)
 
 #### U7-/U8-Zielhostprofile
 
-Manuelle Dienstvorlagen an den gemeinsamen Stackvertrag anschließen.
+U8-Dienstvorlage an den gemeinsamen Stackvertrag anschließen;
+die U7-Stage ist bereits vorhanden.
 [Entwurf](../deployment/ENTWURF.md#produktionsintegration)
 
 #### Wartung, Sicherung und Wiederherstellung

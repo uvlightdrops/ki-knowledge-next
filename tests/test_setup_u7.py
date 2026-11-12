@@ -307,6 +307,9 @@ def test_config_is_private_valid_and_supervisor_uses_worker_timeout(tmp_path, mo
     defaults = tmp_path / "config/defaults"
     defaults.mkdir(parents=True)
     (defaults / "stack.yaml").write_text((PROJECT_ROOT / "config/defaults/stack.yaml").read_text())
+    stages = tmp_path / "config/stages"
+    stages.mkdir()
+    (stages / "uberspace7.yaml").write_text((PROJECT_ROOT / "config/stages/uberspace7.yaml").read_text())
     setup_u7.write_config("example.org", 8780, tmp_path / "static", tmp_path / "var",
                           tmp_path / "wiki", tmp_path / "data")
     for path in (tmp_path / "ki.yaml", tmp_path / "creds.yaml"):
@@ -316,10 +319,14 @@ def test_config_is_private_valid_and_supervisor_uses_worker_timeout(tmp_path, mo
     assert config["apps"][APP]["django"]["debug"] is False
     stack = build_stack(config["stack"], tmp_path)
     assert stack.target == "supervisord"
+    assert stack.service("django").host == "0.0.0.0"
     assert stack.service("import-worker").stop_timeout == 300
     assert stack.service("django").command[-1] == "120"
+    assert (stages / ".active_stage").read_text() == "uberspace7\n"
+    local_config = yaml.safe_load((tmp_path / "ki.yaml").read_text())
+    assert "command" not in local_config["stack"]["services"]["django"]
     assert yaml.safe_load((tmp_path / "creds.yaml").read_text())["apps"][APP]["django"]["secret_key"]
-    with pytest.raises(FileExistsError):
+    with pytest.raises(setup_u7.SetupError, match="Stageauswahl"):
         setup_u7.write_config("example.org", 8780, tmp_path / "static", tmp_path / "var",
                               tmp_path / "wiki", tmp_path / "data")
 

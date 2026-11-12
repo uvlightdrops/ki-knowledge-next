@@ -5,8 +5,8 @@ agent_project: ki-knowledge-next
 scope: deployment
 purpose: "Beschreibt die manuelle Next-Dienstvorlage für Supervisord und das explizite Webrouting auf U7."
 created: "2026-11-11 18"
-updated: "2026-11-12 18"
-update_reason: "Weiterverwendung vorhandener Python-Umgebung und passender Backendrouten beschrieben"
+updated: "2026-11-12 21"
+update_reason: "Versionierte U7-Stage und deren Auswahl im Setup und Dienstbetrieb dokumentiert"
 status: active
 relations:
   - target: README.md
@@ -19,7 +19,7 @@ relations:
 ## Hostvoraussetzungen [hostvoraussetzungen-u7]
 
 ```yaml block-meta
-updated: "2026-11-11 20"
+updated: "2026-11-12 21"
 status: active
 relations:
   - target: BETRIEB.md#produktionsvoraussetzungen
@@ -36,8 +36,31 @@ U7-Standard voraussetzen. Git, `supervisorctl`, Uberspace-CLI, freie Ports,
 Quota und die gewählte Domain prüfen.
 
 Die [gemeinsame Installation](BETRIEB.md#installation) muss abgeschlossen
-sein. Die folgenden Vorlagen sind erst nach Ergänzung der dort benannten
-Produktionssettings und Gunicorn-Abhängigkeit aktivierbar.
+sein. Die versionierte Stage `config/stages/uberspace7.yaml` setzt
+Supervisord, Gunicorn, Bindung an `0.0.0.0`, `debug: false`,
+HTTPS-Proxysettings und den Worker-Stoptimeout. HTTPS-Proxysettings nur
+nach Prüfung des tatsächlichen Proxyvertrags aktivieren.
+Domain, Port, Datenpfade und Zugangsdaten bleiben in `ki.yaml` beziehungsweise
+`creds.yaml`. Die Bindung ist keine öffentliche Portfreigabe:
+öffentlicher Zugriff erfolgt über das Domainbackend.
+
+Das Setup aktiviert die Stage über die ignorierte Datei
+`config/stages/.active_stage`. Bei einer bereits manuell eingerichteten
+Installation kann die Stage nach bestandener Proxyprüfung explizit gewählt
+werden:
+
+```bash
+KI_STAGE=uberspace7 .venv/bin/python -m stackctl start
+KI_STAGE=uberspace7 .venv/bin/python -m stackctl status
+```
+
+Für dauerhafte Auswahl `uberspace7` als einzige Zeile in
+`config/stages/.active_stage` eintragen; eine vorhandene Auswahl vorher
+prüfen. Umgebungsvariable `KI_STAGE` hat Vorrang vor dieser Datei.
+Runtime- und Umgebungsüberschreibungen bleiben gemäß Konfigurationsvertrag
+wirksam. Ohne Stage bleibt der lokale Default auf `127.0.0.1`.
+Die Stage setzt für beide Supervisor-Dienste explizit `KI_STAGE=uberspace7`,
+damit auch nach Neustarts des Supervisors dieselben Produktionssettings gelten.
 Keine alten PostgreSQL-/Ollama-Dienste als Next-Pflichtbestand übernehmen.
 
 Quellen, geprüft am 11. November 2026:
@@ -48,7 +71,7 @@ Quellen, geprüft am 11. November 2026:
 ## Eingaben der Ersteinrichtung [setup-eingaben-u7]
 
 ```yaml block-meta
-updated: "2026-11-12 18"
+updated: "2026-11-12 21"
 status: active
 relations: []
 ```

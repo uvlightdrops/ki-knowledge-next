@@ -306,6 +306,11 @@ def write_private(path: Path, contents: str) -> None:
 def write_config(domain: str, port: int, static_root: Path, var_root: Path,
                  workspace: Path, data: Path) -> None:
     """Write the first-install configuration and independent secret."""
+    stages = ROOT / "config/stages"
+    if not (stages / "uberspace7.yaml").is_file():
+        raise SetupError("Die Deploymentstage config/stages/uberspace7.yaml fehlt.")
+    if (stages / ".active_stage").exists() or (stages / ".active_stage").is_symlink():
+        raise SetupError("Vorhandene Stageauswahl wird nicht überschrieben.")
     home = Path.home()
     quote = json.dumps
     config = f"""apps:
@@ -317,23 +322,17 @@ def write_config(domain: str, port: int, static_root: Path, var_root: Path,
       data_relations: {quote(str(home / 'ki/relations/data'))}
       document_relations: {quote(str(home / 'ki/relations/documentation'))}
     django:
-      debug: false
       allowed_hosts: [{quote(domain)}, "127.0.0.1"]
       static_root: {quote(str(static_root))}
-      https_proxy: true
 stack:
-  target: supervisord
   services:
     django:
-      host: "0.0.0.0"
       port: {port}
-      command: ["{{python}}", "-m", "gunicorn", "knext.wsgi:application", "--bind", "{{host}}:{{port}}", "--workers", "1", "--threads", "2", "--timeout", "120"]
-    import-worker:
-      stop_timeout: 300
 """
     write_private(ROOT / "ki.yaml", config)
     write_private(ROOT / "creds.yaml", f"apps:\n  ki_knowledge_next:\n    django:\n"
                   f"      secret_key: {quote(secrets.token_urlsafe(64))}\n")
+    write_private(stages / ".active_stage", "uberspace7\n")
 
 
 def activate(python: Path, domain: str, port: int) -> None:
