@@ -5,8 +5,8 @@ agent_project: ki-knowledge-next
 scope: requirements
 purpose: "Thematischer Arbeitsvorrat mit eigenständig umzusetzenden einfachen Aufgaben und Konzeptverweisen für komplexere Themen."
 created: "2026-11-11T14:46:00+01:00"
-updated: "2026-11-12 05"
-update_reason: "Spaltenfilter, Sortierung und kompakte Beziehungstypen im internen Bereich nach DONE aufgenommen"
+updated: "2026-11-12 06"
+update_reason: "Layout-Preset-Bewertung verlinkt und Platzaufteilung im breiten Editor aktualisiert"
 status: active
 relations:
   - target: "../README.md"
@@ -58,10 +58,21 @@ Editorzentrierte Varianten erproben; jede angelegte Entwurfsseite zunächst
 temporär in der gemeinsamen Navigation verankern.
 [Entwurf](../architecture/ui/EDITOR-UND-KI.md#seitenentwuerfe)
 
+#### Layout-Presets
+
+[Bewertung mit Widgetkit und Widgetkit-Django](../architecture/ui/EDITOR-UND-KI.md#layout-presets).
+Zunächst benannte Arbeitslayouts erproben; persönliche Speicherung und
+Builder-Anschluss erst nach Klärung des konkreten Bedarfs.
 
 
 ### UI DONE
 
+- Im breiten Editor Vorschau bei offener KI direkt unter dem Text, sonst
+  rechts daneben; KI-Kontrollansicht
+  mit größerer Spalte, höherem Zieltextfeld und lesbaren Anzeigeumbrüchen.
+- Breite Editorvariante mit eigenem Navigationseintrag, gemeinsamem
+  Speicher-/KI-Vertrag und kurzer Endnutzeranleitung.
+  [Bedienung](../features/QUELLEN-UND-TEXTWERKSTATT.md#editor-kurzanleitung)
 - Werkstatt und Editor-Textliste mit getrennten Herkunftsspalten,
   waagrechten Spaltenfiltern und auf-/absteigender Sortierung;
   Beziehungstypen als kompakte Tabelle.
@@ -110,6 +121,12 @@ Begrenzte Aufträge statt vollständigem Domänenchat.
 ###### Schlagworte erstellen
 
 
+
+#### Sonstiges / Neue Konzepte
+
+- manchmal will man einen einzelnen Satz, eine Aussage, wie typischerweise ein Zitat eines Philosophen oder Dichters aufbewahren. Brauchen wir dafür vielleicht besser einen eigenen content type, zb namentlich "snippet".
+- Und manche Aussagen bezeichnen in so ernster tiefer weise einen inneren menschlichen Gedanken, dass man sie als "meme"  bezeichnen möchte. Vielleicht macht man das als attribute von snippel (bool?)
+- 
 
 ### intern DONE
 
@@ -160,7 +177,3 @@ Gewählten Host und isolierte Wiederherstellung prüfen.
 ## Dokumentation
 
 ### DONE
-
-Übernahmekarte auf offene Anschlüsse verdichtet; Deploymentanalyse durch
-[Stand heute und offene Integration](../deployment/ENTWURF.md) ersetzt.
-Die [Betriebsgrundlagen](../deployment/BETRIEB.md) bleiben die Anleitung.
