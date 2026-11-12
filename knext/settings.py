@@ -33,6 +33,13 @@ def _secret_key() -> str:
 SECRET_KEY = DJANGO_CONFIG["secret_key"] or _secret_key()
 DEBUG = DJANGO_CONFIG["debug"]
 ALLOWED_HOSTS = DJANGO_CONFIG["allowed_hosts"]
+if DJANGO_CONFIG["https_proxy"]:
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    SECURE_SSL_REDIRECT = True
+    SECURE_REDIRECT_EXEMPT = [r"^health/ready/$"]
+    SECURE_HSTS_SECONDS = 31536000
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
 
 INSTALLED_APPS = [
     "django.contrib.admin",

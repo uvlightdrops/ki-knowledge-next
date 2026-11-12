@@ -110,6 +110,10 @@ properties:
                 type: string
                 default: ""
                 description: "Empty uses static below paths.var."
+              https_proxy:
+                type: boolean
+                default: false
+                description: "Only enable behind a verified HTTPS proxy that overwrites X-Forwarded-Proto."
   stack:
     type: object
     additionalProperties: false
@@ -120,7 +124,7 @@ properties:
         const: ki-knowledge-next
       target:
         type: string
-        enum: [local]
+        enum: [local, supervisord]
       services:
         type: object
         additionalProperties: false

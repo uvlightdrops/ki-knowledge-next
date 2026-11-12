@@ -25,7 +25,7 @@ dependencies = [
 
 [project.optional-dependencies]
 test = ["pytest>=8", "pytest-django>=4.9", "stackctl"]
-deploy = ["stackctl"]
+deploy = ["stackctl", "gunicorn>=23"]
 
 [tool.setuptools.packages.find]
 include = ["knext*"]
