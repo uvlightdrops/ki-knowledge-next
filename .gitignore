@@ -13,3 +13,4 @@ config/profiles/.active_profile
 .env
 .env.*
 !.env.example
+.idea/
