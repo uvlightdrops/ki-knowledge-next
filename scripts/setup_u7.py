@@ -142,13 +142,27 @@ def check_redirect(domain: str, path: str) -> None:
         raise SetupError("HTTP wird nicht unverändert auf HTTPS derselben Domain umgeleitet.")
 
 
-def backend_conflicts(domain: str, listing: str) -> bool:
-    """Detect existing explicit backends for the domain."""
-    return any(
-        token == domain or token.startswith(domain + "/")
-        for line in listing.splitlines()
-        for token in line.split()[:1]
-    )
+def missing_backend_routes(domain: str, port: int, listing: str) -> dict[str, str]:
+    """Keep matching routes and reject changes to existing route targets."""
+    expected = {domain: f"http:{port}", domain + "/static": "apache"}
+    for line in listing.splitlines():
+        fields = line.split()
+        if not fields:
+            continue
+        route = fields[0].rstrip("/")
+        if route not in expected:
+            continue
+        configuration = line.split("=>", 1)[0].split()[1:]
+        if not configuration or configuration[0] != expected[route] or (
+            len(configuration) > 1 and configuration[1:] != ["(default)"]
+        ):
+            raise SetupError(
+                f"Vorhandenes Backend für {route} passt nicht zu {expected[route]}: {line.strip()}. "
+                "Keine Überschreibung; Zielport oder Routing prüfen."
+            )
+        del expected[route]
+        print(f"Passendes Backend bereits vorhanden, wird übersprungen: {route}")
+    return expected
 
 
 def verify_proxy(domain: str, open_ports: set[int]) -> None:
@@ -243,8 +257,7 @@ def preflight(domain: str, port: int, static_root: Path, var_root: Path) -> None
             raise SetupError(f"Vorhandener Konfigurationslayer: {path}")
     listing = run("uberspace", "web", "backend", "list", capture=True)
     print(listing)
-    if backend_conflicts(domain, listing):
-        raise SetupError("Für diese Domain existiert bereits ein explizites Backend; eigene Domain verwenden.")
+    missing_backend_routes(domain, port, listing)
     port_lines = [line.strip() for line in run("uberspace", "port", "list", capture=True).splitlines() if line.strip()]
     if any(not line.isdigit() or not 1 <= int(line) <= 65535 for line in port_lines):
         raise SetupError("Unerwartete Ausgabe von uberspace port list; offene Ports manuell prüfen.")
@@ -327,12 +340,20 @@ def activate(python: Path, domain: str, port: int) -> None:
     """Start the two services and, after confirmation, assign the domain."""
     run(str(python), "-m", "stackctl", "start")
     run(str(python), "-m", "stackctl", "status")
-    print(run("uberspace", "web", "backend", "list", capture=True))
-    confirm(f"Domain {domain} auf Next umstellen und /static an Apache übergeben?")
-    if backend_conflicts(domain, run("uberspace", "web", "backend", "list", capture=True)):
-        raise SetupError("Routing hat sich geändert; keine Domainzuordnung vorgenommen.")
-    run("uberspace", "web", "backend", "set", domain + "/static", "--apache")
-    run("uberspace", "web", "backend", "set", domain, "--http", "--port", str(port))
+    listing = run("uberspace", "web", "backend", "list", capture=True)
+    print(listing)
+    missing = missing_backend_routes(domain, port, listing)
+    if missing:
+        confirm(f"Fehlende Backends für {', '.join(missing)} einrichten?")
+        current = missing_backend_routes(
+            domain, port, run("uberspace", "web", "backend", "list", capture=True),
+        )
+        if not current.keys() <= missing.keys():
+            raise SetupError("Routing hat sich geändert; keine Domainzuordnung vorgenommen.")
+        if domain + "/static" in current:
+            run("uberspace", "web", "backend", "set", domain + "/static", "--apache")
+        if domain in current:
+            run("uberspace", "web", "backend", "set", domain, "--http", "--port", str(port))
     status, _, body = request(domain, "/health/ready/", secure=True)
     if status != 200 or json.loads(body) != {"status": "ready"}:
         raise SetupError("HTTPS-Readiness fehlgeschlagen; Routing und Dienste manuell prüfen.")

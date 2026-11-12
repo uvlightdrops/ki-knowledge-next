@@ -190,9 +190,75 @@ def test_domain_rejects_non_host_names(name):
         setup_u7.domain_name(name)
 
 
-def test_existing_domain_backends_are_not_overwritten():
-    assert setup_u7.backend_conflicts("example.org", "/ apache\nexample.org/static apache")
-    assert not setup_u7.backend_conflicts("example.org", "/ apache\nother.example.org/ http:8000")
+@pytest.mark.parametrize("root", ["example.org", "example.org/"])
+def test_matching_domain_backends_are_skipped(root):
+    listing = f"{root} http:8780 => NOT OK, no service\nexample.org/static apache\n/ apache (default)"
+    assert setup_u7.missing_backend_routes("example.org", 8780, listing) == {}
+
+
+@pytest.mark.parametrize("entry", [
+    "example.org/ http:8000",
+    "example.org/ apache",
+    "example.org/static http:8780",
+    "example.org/ http:8780, --remove-prefix",
+])
+def test_mismatching_backends_are_not_overwritten(entry):
+    with pytest.raises(setup_u7.SetupError, match="Keine Überschreibung"):
+        setup_u7.missing_backend_routes("example.org", 8780, entry)
+
+
+@pytest.mark.parametrize("existing", ["", "example.org/ http:8780", "example.org/static apache"])
+def test_activation_only_creates_missing_routes(monkeypatch, existing):
+    commands = []
+    confirmations = []
+
+    def run(*command, capture=False):
+        commands.append(command)
+        return existing if capture else ""
+
+    monkeypatch.setattr(setup_u7, "run", run)
+    monkeypatch.setattr(setup_u7, "confirm", confirmations.append)
+    monkeypatch.setattr(setup_u7, "request", lambda *args, **kwargs: (200, {}, b'{"status":"ready"}'))
+    setup_u7.activate(PROJECT_ROOT / ".venv/bin/python", "example.org", 8780)
+    created = [command[4] for command in commands if command[:4] == ("uberspace", "web", "backend", "set")]
+    assert ("example.org" in created) is ("http:8780" not in existing)
+    assert ("example.org/static" in created) is ("static" not in existing)
+    assert len(confirmations) == 1
+
+
+def test_activation_with_all_routes_skips_routing_confirmation_but_checks_readiness(monkeypatch):
+    commands = []
+    requests = []
+
+    def run(*command, capture=False):
+        commands.append(command)
+        return "example.org/ http:8780\nexample.org/static apache"
+
+    def unexpected_confirmation(message):
+        pytest.fail("No routing changes should need confirmation")
+
+    monkeypatch.setattr(setup_u7, "run", run)
+    monkeypatch.setattr(setup_u7, "confirm", unexpected_confirmation)
+    monkeypatch.setattr(setup_u7, "request", lambda *args, **kwargs:
+                        requests.append(args) or (200, {}, b'{"status":"ready"}'))
+    setup_u7.activate(PROJECT_ROOT / ".venv/bin/python", "example.org", 8780)
+    assert not any(command[:4] == ("uberspace", "web", "backend", "set") for command in commands)
+    assert requests == [("example.org", "/health/ready/")]
+
+
+def test_activation_rejects_changed_route_after_confirmation(monkeypatch):
+    listings = iter(["", "example.org/ http:9999"])
+    commands = []
+
+    def run(*command, capture=False):
+        commands.append(command)
+        return next(listings) if capture else ""
+
+    monkeypatch.setattr(setup_u7, "run", run)
+    monkeypatch.setattr(setup_u7, "confirm", lambda message: None)
+    with pytest.raises(setup_u7.SetupError, match="Keine Überschreibung"):
+        setup_u7.activate(PROJECT_ROOT / ".venv/bin/python", "example.org", 8780)
+    assert not any(command[:4] == ("uberspace", "web", "backend", "set") for command in commands)
 
 
 def test_proxy_probe_rejects_spoofing_and_removes_temporary_route(monkeypatch):

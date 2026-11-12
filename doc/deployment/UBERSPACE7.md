@@ -6,7 +6,7 @@ scope: deployment
 purpose: "Beschreibt die manuelle Next-Dienstvorlage für Supervisord und das explizite Webrouting auf U7."
 created: "2026-11-11 18"
 updated: "2026-11-12 18"
-update_reason: "Erkennung und bestätigte Weiterverwendung einer vorhandenen Python-Umgebung beschrieben"
+update_reason: "Weiterverwendung vorhandener Python-Umgebung und passender Backendrouten beschrieben"
 status: active
 relations:
   - target: README.md
@@ -78,6 +78,14 @@ Nach ausdrücklicher Bestätigung wird sie weiterverwendet; die Installation
 kann dabei Pakete aktualisieren. Die Umgebung wird nicht neu erzeugt oder
 gelöscht. Ungültige Umgebungen und als Symlink eingebundene `.venv`-Verzeichnisse
 führen zu einem sichtbaren Abbruch. Fehlt `.venv`, wird sie wie bisher angelegt.
+
+Bereits eingerichtete Domainbackends zum gewählten HTTP-Port und
+`DOMAIN/static` nach Apache bleiben unverändert. Nur fehlende dieser
+beiden Routen werden nach Bestätigung angelegt. Andere Domain-/Pfadrouten
+werden nicht verändert. Abweichende Zielports, Backendtypen oder
+Prefixoptionen führen zu einem Fehler statt einer Überschreibung.
+HTTPS-/Proxyprüfung und abschließende Readinessprüfung bleiben aktiv,
+auch wenn alle benötigten Routen bereits existieren.
 
 ## Webdienst und Importworker [dienste-u7]
 
